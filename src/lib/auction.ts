@@ -5,6 +5,14 @@ import type { Auction, AuctionStatus, BidEntry } from "./types";
 
 const PUBLIC_ADDRESS = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
 
+function parseAuctionStatus(value: unknown): AuctionStatus {
+  if (value === "Active" || value === "Ended") return value;
+  if (Array.isArray(value) && (value[0] === "Active" || value[0] === "Ended")) {
+    return value[0];
+  }
+  return "Active";
+}
+
 function scvToAuction(id: number, value: StellarSdk.xdr.ScVal): Auction {
   const raw = StellarSdk.scValToNative(value) as {
     seller: string;
@@ -13,7 +21,7 @@ function scvToAuction(id: number, value: StellarSdk.xdr.ScVal): Auction {
     highest_bid: bigint | number;
     highest_bidder: string | null;
     end_time: bigint | number;
-    status: AuctionStatus;
+    status: unknown;
   };
 
   return {
@@ -24,7 +32,7 @@ function scvToAuction(id: number, value: StellarSdk.xdr.ScVal): Auction {
     highestBid: BigInt(raw.highest_bid),
     highestBidder: raw.highest_bidder,
     endTime: Number(raw.end_time),
-    status: raw.status,
+    status: parseAuctionStatus(raw.status),
   };
 }
 

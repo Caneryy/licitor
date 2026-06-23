@@ -29,22 +29,28 @@ export function useAuctionEvents(auctionId: number | null, enabled: boolean) {
       try {
         const contractId = getContractId();
         if (cursorRef.current === null) {
-          const latest = await fetchBidEvents(contractId, auctionId, 1);
-          cursorRef.current = latest.latestLedger + 1;
-        }
+          const initial = await fetchBidEvents(contractId, auctionId, 1);
+          cursorRef.current = initial.latestLedger + 1;
 
-        const { events: incoming, latestLedger } = await fetchBidEvents(
-          contractId,
-          auctionId,
-          cursorRef.current,
-        );
+          const seeded = initial.events.filter((event) => !seenRef.current.has(event.id));
+          if (seeded.length > 0) {
+            seeded.forEach((event) => seenRef.current.add(event.id));
+            setEvents(seeded.slice(-20).reverse());
+          }
+        } else {
+          const { events: incoming, latestLedger } = await fetchBidEvents(
+            contractId,
+            auctionId,
+            cursorRef.current,
+          );
 
-        cursorRef.current = latestLedger + 1;
+          cursorRef.current = latestLedger + 1;
 
-        const fresh = incoming.filter((event) => !seenRef.current.has(event.id));
-        if (fresh.length > 0) {
-          fresh.forEach((event) => seenRef.current.add(event.id));
-          setEvents((current) => [...fresh, ...current].slice(0, 20));
+          const fresh = incoming.filter((event) => !seenRef.current.has(event.id));
+          if (fresh.length > 0) {
+            fresh.forEach((event) => seenRef.current.add(event.id));
+            setEvents((current) => [...fresh, ...current].slice(0, 20));
+          }
         }
       } catch {
         // Ignore transient RPC errors during background sync.
