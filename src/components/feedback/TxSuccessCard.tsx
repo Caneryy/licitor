@@ -1,4 +1,6 @@
+import { Button } from "../ui/Button";
 import { getExplorerTxUrl } from "../../lib/explorer";
+import { truncateMiddle } from "../../lib/format";
 
 interface TxSuccessCardProps {
   hash: string;
@@ -12,21 +14,32 @@ export function TxSuccessCard({
   resetLabel = "Dismiss",
 }: TxSuccessCardProps) {
   return (
-    <div className="tx-success space-y-3 border-2 border-[var(--border)] bg-[var(--paper)] p-4">
-      <p className="font-bold text-[var(--accent)]">Transaction confirmed</p>
-      <div className="flex flex-col items-start gap-2">
+    <div className="tx-success-card" role="status" aria-live="polite">
+      <div className="flex items-start gap-3">
+        <span className="tx-success-icon" aria-hidden="true">
+          ✓
+        </span>
+        <div className="min-w-0 flex-1 space-y-1">
+          <p className="tx-success-title">Transaction confirmed</p>
+          <p className="text-xs text-neutral-700">
+            Hash: <span className="font-mono font-bold">{truncateMiddle(hash, 8, 8)}</span>
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row">
         <a
           href={getExplorerTxUrl(hash)}
           target="_blank"
           rel="noreferrer"
-          className="text-sm font-bold underline"
+          className="neo-button inline-flex min-h-11 flex-1 items-center justify-center px-4 py-3 text-center no-underline"
         >
-          View on Stellar Expert
+          View on Stellar Expert ↗
         </a>
         {onReset && (
-          <button type="button" className="text-sm font-bold underline" onClick={onReset}>
+          <Button type="button" variant="ghost" className="w-full flex-1" onClick={onReset}>
             {resetLabel}
-          </button>
+          </Button>
         )}
       </div>
     </div>
