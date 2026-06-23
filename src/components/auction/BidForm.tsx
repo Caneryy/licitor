@@ -9,6 +9,7 @@ import { useBalance } from "../../hooks/useBalance";
 import { buildPlaceBidArgs } from "../../lib/auction";
 import { validationErrors } from "../../lib/errors";
 import { stroopsToXlm, xlmToStroops } from "../../lib/format";
+import { AnimatedHighestBid } from "./AnimatedHighestBid";
 import type { Auction, PlacedBid } from "../../lib/types";
 
 interface BidFormProps {
@@ -86,7 +87,7 @@ export function BidForm({ auction, onBidPlaced }: BidFormProps) {
     >
       <h2 className="text-2xl font-black">Place Bid</h2>
       <p className="text-sm">
-        Current highest: <strong>{stroopsToXlm(auction.highestBid)} XLM</strong>
+        Current highest: <AnimatedHighestBid amount={auction.highestBid} />
       </p>
       <ErrorBanner message={localError ?? error?.message ?? ""} onDismiss={() => setLocalError(null)} />
 

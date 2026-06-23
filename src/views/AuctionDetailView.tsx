@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { AuctionCountdown } from "../components/auction/AuctionCountdown";
 import { BidForm } from "../components/auction/BidForm";
 import { BidHistoryList } from "../components/auction/BidHistoryList";
+import { AnimatedHighestBid } from "../components/auction/AnimatedHighestBid";
 import { ErrorBanner } from "../components/feedback/ErrorBanner";
 import { TxStatusButton } from "../components/feedback/TxStatusButton";
 import { TxSuccessCard } from "../components/feedback/TxSuccessCard";
@@ -10,7 +11,7 @@ import { useAuctionEvents } from "../hooks/useAuctionEvents";
 import { useSubmitAction } from "../hooks/useSubmitAction";
 import { useStellarWallet } from "../hooks/useStellarWallet";
 import { buildFinalizeArgs } from "../lib/auction";
-import { stroopsToXlm, truncateMiddle } from "../lib/format";
+import { truncateMiddle } from "../lib/format";
 import { Badge } from "../components/ui/Badge";
 import type { PlacedBid } from "../lib/types";
 
@@ -88,7 +89,7 @@ export function AuctionDetailView({ auctionId, onBack }: AuctionDetailViewProps)
           Seller: <strong>{truncateMiddle(auction.seller, 8, 6)}</strong>
         </p>
         <p className="text-sm">
-          Highest bid: <strong>{stroopsToXlm(auction.highestBid)} XLM</strong>
+          Highest bid: <AnimatedHighestBid amount={auction.highestBid} />
         </p>
         <p className="text-sm">
           Ends in: <AuctionCountdown auction={auction} />
@@ -97,7 +98,7 @@ export function AuctionDetailView({ auctionId, onBack }: AuctionDetailViewProps)
 
       <div className="grid gap-4 lg:grid-cols-2">
         <BidForm auction={auction} onBidPlaced={handleBidPlaced} />
-        <BidHistoryList bids={mergedBids} live={live} />
+        <BidHistoryList auctionId={auctionId} bids={mergedBids} live={live} />
       </div>
 
       {canFinalize && (
