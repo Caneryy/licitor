@@ -32,6 +32,15 @@ h3 {
 
 a {
   color: inherit;
+  cursor: pointer;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
 }
 
 .neo-card {
@@ -47,6 +56,7 @@ a {
   box-shadow: var(--shadow);
   font-family: var(--font-display);
   font-weight: 700;
+  cursor: pointer;
   transition: transform 120ms ease, box-shadow 120ms ease;
 }
 
