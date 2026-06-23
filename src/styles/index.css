@@ -1,0 +1,82 @@
+@import "./tokens.css";
+@import "tailwindcss";
+
+@theme {
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+.neo-card {
+  border: 2px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.neo-button {
+  border: 2px solid var(--border);
+  background: var(--accent);
+  color: white;
+  box-shadow: var(--shadow);
+  font-family: var(--font-display);
+  font-weight: 700;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.neo-button:hover:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.neo-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.neo-input {
+  border: 2px solid var(--border);
+  background: var(--surface);
+  box-shadow: 2px 2px 0 var(--ink);
+  font-family: var(--font-body);
+}
+
+.live-pulse {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
