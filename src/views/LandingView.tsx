@@ -5,6 +5,7 @@ import { FeaturesSection } from "../components/landing/FeaturesSection";
 import { Footer } from "../components/landing/Footer";
 import { HeroSection } from "../components/landing/HeroSection";
 import { HowItWorksSection } from "../components/landing/HowItWorksSection";
+import { ShowcaseSection } from "../components/landing/ShowcaseSection";
 import { TechnologySection } from "../components/landing/TechnologySection";
 
 interface LandingViewProps {
@@ -16,6 +17,7 @@ export function LandingView({ onEnterApp }: LandingViewProps) {
     <LandingShell onEnterApp={onEnterApp}>
       <HeroSection onBrowse={() => onEnterApp("auctions")} onCreate={() => onEnterApp("create")} />
       <FeaturesSection />
+      <ShowcaseSection onBrowse={() => onEnterApp("auctions")} />
       <HowItWorksSection />
       <TechnologySection />
       <FaqSection />
