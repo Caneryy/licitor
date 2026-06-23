@@ -579,30 +579,53 @@ input:focus-visible,
   box-shadow: var(--shadow);
 }
 
-.landing-footer {
+.site-footer {
   border-top: 2px solid var(--border);
   background: var(--ink);
   color: var(--paper);
 }
 
-.landing-footer-link {
-  color: color-mix(in srgb, var(--paper) 82%, transparent);
+.site-footer-brand {
+  cursor: pointer;
+  transition: opacity 120ms ease;
+}
+
+.site-footer-brand:hover {
+  opacity: 0.85;
+}
+
+.site-footer-heading {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--paper);
+}
+
+.site-footer-list {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.site-footer-link {
+  color: var(--paper-muted);
   text-align: left;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration: none;
   transition: color 120ms ease;
 }
 
-.landing-footer-link:hover {
+.site-footer-link:hover {
   color: var(--paper);
 }
 
-.landing-footer h3 {
-  color: var(--paper);
+.site-footer-bottom {
+  border-top: 2px solid color-mix(in srgb, var(--paper) 22%, transparent);
 }
 
-.landing-footer-bottom {
-  border-top-color: color-mix(in srgb, var(--paper) 25%, transparent);
+.legal-page .legal-section + .legal-section {
+  padding-top: 0.25rem;
 }
 
 @media (max-width: 640px) {

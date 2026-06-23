@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "./components/layout/AppShell";
+import { LegalShell } from "./components/layout/LegalShell";
 import { AuctionDetailView } from "./views/AuctionDetailView";
 import { AuctionListView } from "./views/AuctionListView";
 import { CreateAuctionView } from "./views/CreateAuctionView";
 import { LandingView } from "./views/LandingView";
+import { LegalPageView } from "./views/LegalPageView";
 import { navigateTo, parsePath, type AppRoute } from "./lib/routes";
 
 export default function App() {
@@ -31,12 +33,26 @@ export default function App() {
     [goTo],
   );
 
+  if (route.view === "legal") {
+    return (
+      <LegalShell
+        onGoHome={() => goTo({ view: "home" })}
+        onEnterApp={(view) => goTo({ view })}
+        onLegalPage={(page) => goTo({ view: "legal", page })}
+      >
+        <LegalPageView page={route.page} onGoHome={() => goTo({ view: "home" })} />
+      </LegalShell>
+    );
+  }
+
   if (route.view === "home") {
     return (
       <LandingView
         onEnterApp={(view) => {
           goTo({ view });
         }}
+        onGoHome={() => goTo({ view: "home" })}
+        onLegalPage={(page) => goTo({ view: "legal", page })}
       />
     );
   }

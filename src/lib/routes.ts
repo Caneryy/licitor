@@ -1,8 +1,19 @@
+import type { LegalPage } from "./legal";
+
+export type { LegalPage };
+
 export type AppRoute =
   | { view: "home" }
   | { view: "auctions" }
   | { view: "create" }
-  | { view: "detail"; auctionId: number };
+  | { view: "detail"; auctionId: number }
+  | { view: "legal"; page: LegalPage };
+
+const LEGAL_PATHS: Record<LegalPage, string> = {
+  privacy: "/privacy",
+  terms: "/terms",
+  cookies: "/cookies",
+};
 
 export function parsePath(pathname: string): AppRoute {
   const path = pathname.replace(/\/+$/, "") || "/";
@@ -17,6 +28,18 @@ export function parsePath(pathname: string): AppRoute {
 
   if (path === "/create") {
     return { view: "create" };
+  }
+
+  if (path === "/privacy") {
+    return { view: "legal", page: "privacy" };
+  }
+
+  if (path === "/terms") {
+    return { view: "legal", page: "terms" };
+  }
+
+  if (path === "/cookies") {
+    return { view: "legal", page: "cookies" };
   }
 
   const match = path.match(/^\/auction\/(\d+)$/);
@@ -40,6 +63,8 @@ export function pathForRoute(route: AppRoute): string {
       return "/create";
     case "detail":
       return `/auction/${route.auctionId}`;
+    case "legal":
+      return LEGAL_PATHS[route.page];
   }
 }
 
