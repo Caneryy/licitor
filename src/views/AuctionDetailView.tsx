@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { AuctionCountdown } from "../components/auction/AuctionCountdown";
 import { BidForm } from "../components/auction/BidForm";
 import { BidHistoryList } from "../components/auction/BidHistoryList";
-import { LiveBidFeed } from "../components/auction/LiveBidFeed";
 import { ErrorBanner } from "../components/feedback/ErrorBanner";
 import { TxStatusButton } from "../components/feedback/TxStatusButton";
 import { TxSuccessCard } from "../components/feedback/TxSuccessCard";
@@ -31,7 +30,9 @@ export function AuctionDetailView({ auctionId, onBack }: AuctionDetailViewProps)
   const finalizeAction = useSubmitAction();
 
   const mergedBids = useMemo(() => {
-    const txMap = new Map(liveEvents.map((event) => [event.id, event.txHash]));
+    const txMap = new Map(
+      liveEvents.map((event) => [`${event.bidder}:${event.amount.toString()}`, event.txHash]),
+    );
     return bids.map((bid, index) => ({
       ...bid,
       txHash: bid.txHash ?? txMap.get(`${bid.bidder}:${bid.amount.toString()}`),
@@ -96,10 +97,8 @@ export function AuctionDetailView({ auctionId, onBack }: AuctionDetailViewProps)
 
       <div className="grid gap-4 lg:grid-cols-2">
         <BidForm auction={auction} onBidPlaced={handleBidPlaced} />
-        <LiveBidFeed events={liveEvents} live={live} />
+        <BidHistoryList bids={mergedBids} live={live} />
       </div>
-
-      <BidHistoryList bids={mergedBids} />
 
       {canFinalize && (
         <section className="neo-card space-y-3 p-4">
