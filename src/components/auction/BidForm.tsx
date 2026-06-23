@@ -8,8 +8,10 @@ import { useStellarWallet } from "../../hooks/useStellarWallet";
 import { useBalance } from "../../hooks/useBalance";
 import { buildPlaceBidArgs } from "../../lib/auction";
 import { validationErrors } from "../../lib/errors";
+import { isBiddingOpen } from "../../lib/auctionDisplay";
 import { stroopsToXlm, xlmToStroops } from "../../lib/format";
 import { AnimatedHighestBid } from "./AnimatedHighestBid";
+import { useAuctionNow } from "./AuctionStatus";
 import type { Auction, PlacedBid } from "../../lib/types";
 
 interface BidFormProps {
@@ -21,6 +23,8 @@ export function BidForm({ auction, onBidPlaced }: BidFormProps) {
   const { address, connected, sign } = useStellarWallet();
   const { hasFeeBalance } = useBalance(address);
   const { phase, error, txHash, run, reset } = useSubmitAction();
+  const now = useAuctionNow();
+  const biddingOpen = isBiddingOpen(auction, now);
 
   const minBid = auction.highestBid + 1n;
   const [amount, setAmount] = useState(stroopsToXlm(minBid));
@@ -32,8 +36,8 @@ export function BidForm({ auction, onBidPlaced }: BidFormProps) {
       setLocalError("Connect a wallet first.");
       return;
     }
-    if (auction.status === "Ended") {
-      setLocalError("Auction has ended.");
+    if (!biddingOpen) {
+      setLocalError(auction.status === "Ended" ? "Auction has ended." : "Bidding is closed for this auction.");
       return;
     }
     if (!hasFeeBalance) {
@@ -72,7 +76,7 @@ export function BidForm({ auction, onBidPlaced }: BidFormProps) {
   };
 
   const disabled =
-    auction.status === "Ended" ||
+    !biddingOpen ||
     phase === "signing" ||
     phase === "submitting" ||
     phase === "confirming";

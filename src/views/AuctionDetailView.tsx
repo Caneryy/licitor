@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { AuctionCountdown } from "../components/auction/AuctionCountdown";
+import { AuctionStatusBadge } from "../components/auction/AuctionStatus";
 import { BidForm } from "../components/auction/BidForm";
 import { BidHistoryList } from "../components/auction/BidHistoryList";
 import { AnimatedHighestBid } from "../components/auction/AnimatedHighestBid";
@@ -11,9 +12,9 @@ import { useAuctionEvents } from "../hooks/useAuctionEvents";
 import { useSubmitAction } from "../hooks/useSubmitAction";
 import { useStellarWallet } from "../hooks/useStellarWallet";
 import { buildFinalizeArgs } from "../lib/auction";
+import { getAuctionPhase } from "../lib/auctionDisplay";
 import { truncateMiddle } from "../lib/format";
 import { auctionUrl } from "../lib/routes";
-import { Badge } from "../components/ui/Badge";
 import type { PlacedBid } from "../lib/types";
 
 interface AuctionDetailViewProps {
@@ -25,7 +26,7 @@ export function AuctionDetailView({ auctionId, onBack }: AuctionDetailViewProps)
   const [copied, setCopied] = useState(false);
   const { address, sign } = useStellarWallet();
   const { auction, bids, loading, error, refreshDetail } = useAuctionDetail(auctionId, undefined, true);
-  const listenerEnabled = auction?.status === "Active";
+  const listenerEnabled = auction ? getAuctionPhase(auction) === "live" : false;
   const { events: liveEvents, live, pushBidEvent, refreshEvents } = useAuctionEvents(
     auctionId,
     listenerEnabled,
@@ -73,8 +74,7 @@ export function AuctionDetailView({ auctionId, onBack }: AuctionDetailViewProps)
     return <ErrorBanner message={error ?? "Auction not found."} />;
   }
 
-  const canFinalize =
-    auction.status === "Active" && Math.floor(Date.now() / 1000) >= auction.endTime;
+  const canFinalize = auction ? getAuctionPhase(auction) === "expired" : false;
 
   const copyShareLink = async () => {
     try {
@@ -100,7 +100,7 @@ export function AuctionDetailView({ auctionId, onBack }: AuctionDetailViewProps)
       <section className="neo-card space-y-3 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-3xl font-black">{auction.title}</h2>
-          <Badge>{auction.status}</Badge>
+          <AuctionStatusBadge auction={auction} />
         </div>
         <p className="text-sm">
           Seller: <strong>{truncateMiddle(auction.seller, 8, 6)}</strong>
@@ -109,7 +109,8 @@ export function AuctionDetailView({ auctionId, onBack }: AuctionDetailViewProps)
           Highest bid: <AnimatedHighestBid amount={auction.highestBid} />
         </p>
         <p className="text-sm">
-          Ends in: <AuctionCountdown auction={auction} />
+          {getAuctionPhase(auction) === "live" ? "Ends in" : "Status"}:{" "}
+          <AuctionCountdown auction={auction} />
         </p>
       </section>
 
