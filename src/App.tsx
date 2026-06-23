@@ -1,44 +1,54 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "./components/layout/AppShell";
 import { AuctionDetailView } from "./views/AuctionDetailView";
 import { AuctionListView } from "./views/AuctionListView";
 import { CreateAuctionView } from "./views/CreateAuctionView";
-import type { AppView } from "./lib/types";
+import { navigateTo, parsePath, type AppRoute } from "./lib/routes";
 
 export default function App() {
-  const [view, setView] = useState<AppView>("auctions");
-  const [selectedAuctionId, setSelectedAuctionId] = useState<number | null>(null);
+  const [route, setRoute] = useState<AppRoute>(() => parsePath(window.location.pathname));
 
-  const openAuction = (auctionId: number) => {
-    setSelectedAuctionId(auctionId);
-    setView("detail");
-  };
+  const goTo = useCallback((next: AppRoute, options?: { replace?: boolean }) => {
+    navigateTo(next, options);
+    setRoute(next);
+  }, []);
+
+  useEffect(() => {
+    const onPopState = () => {
+      setRoute(parsePath(window.location.pathname));
+    };
+
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  const openAuction = useCallback(
+    (auctionId: number) => {
+      goTo({ view: "detail", auctionId });
+    },
+    [goTo],
+  );
 
   return (
     <AppShell
-      view={view}
-      onNavigate={(nextView) => {
-        setView(nextView);
-        if (nextView !== "detail") {
-          setSelectedAuctionId(null);
-        }
+      view={route.view}
+      onNavigate={(view) => {
+        if (view === "detail") return;
+        goTo({ view });
       }}
     >
-      {view === "auctions" && <AuctionListView onOpen={openAuction} />}
-      {view === "create" && (
+      {route.view === "auctions" && <AuctionListView onOpen={openAuction} />}
+      {route.view === "create" && (
         <CreateAuctionView
           onCreated={(auctionId) => {
-            openAuction(auctionId);
+            goTo({ view: "detail", auctionId }, { replace: true });
           }}
         />
       )}
-      {view === "detail" && selectedAuctionId !== null && (
+      {route.view === "detail" && (
         <AuctionDetailView
-          auctionId={selectedAuctionId}
-          onBack={() => {
-            setSelectedAuctionId(null);
-            setView("auctions");
-          }}
+          auctionId={route.auctionId}
+          onBack={() => goTo({ view: "auctions" })}
         />
       )}
     </AppShell>

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { AuctionCountdown } from "../components/auction/AuctionCountdown";
 import { BidForm } from "../components/auction/BidForm";
 import { BidHistoryList } from "../components/auction/BidHistoryList";
@@ -12,6 +12,7 @@ import { useSubmitAction } from "../hooks/useSubmitAction";
 import { useStellarWallet } from "../hooks/useStellarWallet";
 import { buildFinalizeArgs } from "../lib/auction";
 import { truncateMiddle } from "../lib/format";
+import { auctionUrl } from "../lib/routes";
 import { Badge } from "../components/ui/Badge";
 import type { PlacedBid } from "../lib/types";
 
@@ -21,6 +22,7 @@ interface AuctionDetailViewProps {
 }
 
 export function AuctionDetailView({ auctionId, onBack }: AuctionDetailViewProps) {
+  const [copied, setCopied] = useState(false);
   const { address, sign } = useStellarWallet();
   const { auction, bids, loading, error, refreshDetail } = useAuctionDetail(auctionId, undefined, true);
   const listenerEnabled = auction?.status === "Active";
@@ -74,11 +76,26 @@ export function AuctionDetailView({ auctionId, onBack }: AuctionDetailViewProps)
   const canFinalize =
     auction.status === "Active" && Math.floor(Date.now() / 1000) >= auction.endTime;
 
+  const copyShareLink = async () => {
+    try {
+      await navigator.clipboard.writeText(auctionUrl(auctionId));
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard may be blocked; the URL is still visible in the address bar.
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <button type="button" className="font-bold underline" onClick={onBack}>
-        ← Back to auctions
-      </button>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <button type="button" className="font-bold underline" onClick={onBack}>
+          ← Back to auctions
+        </button>
+        <button type="button" className="neo-button px-3 py-2 text-sm" onClick={() => void copyShareLink()}>
+          {copied ? "Link copied" : "Copy share link"}
+        </button>
+      </div>
 
       <section className="neo-card space-y-3 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
