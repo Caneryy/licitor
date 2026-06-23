@@ -44,4 +44,4 @@ export type TxPhase =
   | "success"
   | "error";
 
-export type AppView = "auctions" | "create" | "detail";
+export type AppView = "home" | "auctions" | "create" | "detail";

@@ -22,7 +22,7 @@ export function AppShell({ view, onNavigate, children }: AppShellProps) {
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between">
           <button
             type="button"
-            onClick={() => onNavigate("auctions")}
+            onClick={() => onNavigate("home")}
             className="text-left transition-opacity hover:opacity-80"
             aria-label="Go to home"
           >

@@ -3,6 +3,7 @@ import { AppShell } from "./components/layout/AppShell";
 import { AuctionDetailView } from "./views/AuctionDetailView";
 import { AuctionListView } from "./views/AuctionListView";
 import { CreateAuctionView } from "./views/CreateAuctionView";
+import { LandingView } from "./views/LandingView";
 import { navigateTo, parsePath, type AppRoute } from "./lib/routes";
 
 export default function App() {
@@ -11,6 +12,7 @@ export default function App() {
   const goTo = useCallback((next: AppRoute, options?: { replace?: boolean }) => {
     navigateTo(next, options);
     setRoute(next);
+    window.scrollTo(0, 0);
   }, []);
 
   useEffect(() => {
@@ -28,6 +30,16 @@ export default function App() {
     },
     [goTo],
   );
+
+  if (route.view === "home") {
+    return (
+      <LandingView
+        onEnterApp={(view) => {
+          goTo({ view });
+        }}
+      />
+    );
+  }
 
   return (
     <AppShell

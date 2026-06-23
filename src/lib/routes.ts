@@ -1,4 +1,5 @@
 export type AppRoute =
+  | { view: "home" }
   | { view: "auctions" }
   | { view: "create" }
   | { view: "detail"; auctionId: number };
@@ -6,7 +7,11 @@ export type AppRoute =
 export function parsePath(pathname: string): AppRoute {
   const path = pathname.replace(/\/+$/, "") || "/";
 
-  if (path === "/" || path === "/auctions") {
+  if (path === "/") {
+    return { view: "home" };
+  }
+
+  if (path === "/auctions") {
     return { view: "auctions" };
   }
 
@@ -22,11 +27,13 @@ export function parsePath(pathname: string): AppRoute {
     }
   }
 
-  return { view: "auctions" };
+  return { view: "home" };
 }
 
 export function pathForRoute(route: AppRoute): string {
   switch (route.view) {
+    case "home":
+      return "/";
     case "auctions":
       return "/auctions";
     case "create":
@@ -49,4 +56,11 @@ export function navigateTo(route: AppRoute, options?: { replace?: boolean }) {
 
 export function auctionUrl(auctionId: number): string {
   return new URL(pathForRoute({ view: "detail", auctionId }), window.location.origin).href;
+}
+
+export function scrollToSection(id: string) {
+  const element = document.getElementById(id);
+  if (element) {
+    element.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 }
