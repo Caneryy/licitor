@@ -33,8 +33,8 @@ export function TechnologySection() {
               Licitor is a decentralized application. The UI is a window into Soroban contract
               state. Nothing critical happens off-chain.
             </p>
-            <div className="mt-6 neo-card bg-[var(--accent)] p-5 text-white">
-              <p className="text-xs font-bold uppercase tracking-[0.15em] opacity-90">Why Stellar?</p>
+            <div className="landing-accent-card mt-6 p-5">
+              <p className="text-xs font-bold uppercase tracking-[0.15em]">Why Stellar?</p>
               <p className="mt-2 text-sm leading-relaxed">
                 Sub-second confirmation, predictable fees, and a mature wallet ecosystem make Stellar
                 a strong fit for real-time marketplaces and auction flows.

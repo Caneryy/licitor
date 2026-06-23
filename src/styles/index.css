@@ -535,6 +535,13 @@ input:focus-visible,
   box-shadow: var(--shadow);
 }
 
+.landing-accent-card {
+  border: 2px solid var(--border);
+  background: var(--accent);
+  color: white;
+  box-shadow: var(--shadow);
+}
+
 .landing-footer {
   border-top: 2px solid var(--border);
   background: var(--ink);
