@@ -2,6 +2,44 @@
 
 Stellar testnet live bidding dApp built with Soroban, StellarWalletsKit, and cursor-based `getEvents` synchronization.
 
+## Submission checklist
+
+### Live demo (optional)
+
+**Production:** [https://licitor-psi.vercel.app](https://licitor-psi.vercel.app)
+
+Deployed on Vercel. Use `/auctions` to browse listings or `/create` to open a new auction.
+
+### Wallet options
+
+Licitor supports multiple wallets via [Stellar Wallets Kit](https://github.com/Creit-Tech/Stellar-WalletsKit):
+
+- Freighter
+- xBull
+- Lobstr
+
+![Wallet options available in the Connect Wallet modal](./docs/screenshots/wallet-options.png)
+
+### Deployed contract address (testnet)
+
+`CBKLZBSTFM5YQ27LRDHDA4VTEY4CDCWVSHKOYWZN2X7AIKBKVRRPFGBQ`
+
+- [View contract on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBKLZBSTFM5YQ27LRDHDA4VTEY4CDCWVSHKOYWZN2X7AIKBKVRRPFGBQ)
+
+### Sample contract call transaction (testnet)
+
+Example `invoke_host_function` against the auction contract (verifiable on Stellar Expert):
+
+`e79e85f1532b3c8025069ccf540e36f02a7d78a711210e2dca16304835421e98`
+
+- [View transaction on Stellar Expert](https://stellar.expert/explorer/testnet/tx/e79e85f1532b3c8025069ccf540e36f02a7d78a711210e2dca16304835421e98)
+
+Contract deployment transaction:
+
+`8f4985742466ba803a0afcad57eade1440c7a4c54b1e112655a35e7860942fa3`
+
+- [View deploy transaction on Stellar Expert](https://stellar.expert/explorer/testnet/tx/8f4985742466ba803a0afcad57eade1440c7a4c54b1e112655a35e7860942fa3)
+
 ## Features
 
 - Multi-wallet support: Freighter, xBull, Lobstr
@@ -76,6 +114,8 @@ vercel --prod
 ```
 
 After deployment, open routes like `/`, `/auctions`, and `/privacy` to confirm SPA routing works.
+
+**Live deployment:** [https://licitor-psi.vercel.app](https://licitor-psi.vercel.app)
 
 ## Demo: live bidding across browsers
 
