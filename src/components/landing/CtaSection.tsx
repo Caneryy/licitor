@@ -14,8 +14,7 @@ export function CtaSection({ onBrowse, onCreate }: CtaSectionProps) {
             <p className="landing-eyebrow justify-center">Get started</p>
             <h2 className="text-3xl font-black sm:text-4xl">Ready to bid or list your first item?</h2>
             <p className="mt-3 text-[var(--ink-muted)]">
-              Connect Freighter, head into the app, and experience real-time on-chain auctions on
-              Stellar testnet.
+              Head into the app and experience real-time on-chain auctions on Stellar testnet.
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Button type="button" onClick={onBrowse}>

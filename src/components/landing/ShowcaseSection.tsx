@@ -31,7 +31,7 @@ interface ShowcaseSectionProps {
 
 export function ShowcaseSection({ onBrowse }: ShowcaseSectionProps) {
   return (
-    <section className="landing-section">
+    <section id="showcase" className="landing-section">
       <div className="mx-auto max-w-6xl px-4">
         <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
           <div className="max-w-2xl">

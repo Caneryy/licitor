@@ -34,7 +34,7 @@ export function FaqSection() {
           <p className="landing-eyebrow">FAQ</p>
           <h2 className="text-3xl font-black sm:text-4xl">Common questions</h2>
           <p className="mt-3 text-[var(--ink-muted)]">
-            Quick answers before you connect your wallet and jump into the app.
+            Quick answers before you jump into the app.
           </p>
         </div>
 

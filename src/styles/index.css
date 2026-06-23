@@ -355,6 +355,54 @@ input:focus-visible,
 
 /* Landing page */
 
+.landing-header-inner {
+  display: grid;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "brand actions"
+    "nav nav";
+}
+
+.landing-header-brand {
+  grid-area: brand;
+}
+
+.landing-header-nav {
+  grid-area: nav;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.15rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.landing-nav-btn {
+  font-size: 0.95rem;
+}
+
+.landing-header-actions {
+  grid-area: actions;
+}
+
+@media (min-width: 1024px) {
+  .landing-header-inner {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: "brand nav actions";
+    gap: 1.25rem 1.5rem;
+  }
+
+  .landing-header-nav {
+    justify-content: center;
+    overflow-x: visible;
+    flex-wrap: wrap;
+    padding-bottom: 0;
+  }
+}
+
 .landing-hero {
   border-bottom: 2px solid var(--border);
   background:
@@ -384,17 +432,6 @@ input:focus-visible,
   font-weight: 800;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--accent);
-}
-
-.landing-nav-link {
-  color: var(--ink);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  transition: color 120ms ease;
-}
-
-.landing-nav-link:hover {
   color: var(--accent);
 }
 
