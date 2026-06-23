@@ -47,6 +47,13 @@ export async function submitSignedTransaction(signedXdr: string): Promise<Submit
     config.networkPassphrase,
   ) as StellarSdk.Transaction;
 
+  const hasSignature = transaction.signatures.some(
+    (decorated) => decorated.signature().length > 0,
+  );
+  if (!hasSignature) {
+    throw new Error("tx_not_signed");
+  }
+
   const response = await rpc.sendTransaction(transaction);
 
   if (response.status === "ERROR") {
@@ -75,13 +82,17 @@ export async function invokeContract(
   contractId: string,
   method: string,
   args: StellarSdk.xdr.ScVal[],
-  sign: (xdr: string) => Promise<string>,
+  sign: (xdr: string, sourceAddress: string) => Promise<string>,
   onPhase?: (phase: "signing" | "submitting" | "confirming") => void,
 ): Promise<SubmitResult> {
   try {
     const prepared = await simulateAndPrepare(sourceAddress, contractId, method, args);
     onPhase?.("signing");
-    const signedXdr = await sign(prepared.toXDR());
+    if (prepared.source !== sourceAddress) {
+      throw new Error("wallet_address_mismatch");
+    }
+
+    const signedXdr = await sign(prepared.toXDR(), sourceAddress);
     onPhase?.("submitting");
     onPhase?.("confirming");
     return await submitSignedTransaction(signedXdr);

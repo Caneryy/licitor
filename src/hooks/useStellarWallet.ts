@@ -77,15 +77,35 @@ export function useStellarWallet() {
   }, []);
 
   const sign = useCallback(
-    async (xdr: string) => {
-      if (!address) throw classifyError(new Error("wallet_not_found"));
+    async (xdr: string, expectedSource: string) => {
+      ensureKit();
+
+      const network = await StellarWalletsKit.getNetwork();
+      if (!isTestnetPassphrase(network.networkPassphrase)) {
+        throw classifyError(new Error("wrong_network"));
+      }
+
+      const { address: signerAddress } = await StellarWalletsKit.fetchAddress();
+      if (signerAddress !== expectedSource) {
+        throw classifyError(new Error("wallet_address_mismatch"));
+      }
+
+      setAddress(signerAddress);
+      setConnected(true);
+      setNetworkPassphrase(network.networkPassphrase);
+
       const { signedTxXdr } = await StellarWalletsKit.signTransaction(xdr, {
         networkPassphrase: config.networkPassphrase,
-        address,
+        address: signerAddress,
       });
+
+      if (!signedTxXdr) {
+        throw classifyError(new Error("tx_not_signed"));
+      }
+
       return signedTxXdr;
     },
-    [address],
+    [],
   );
 
   const isTestnet = networkPassphrase ? isTestnetPassphrase(networkPassphrase) : true;

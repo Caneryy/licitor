@@ -9,7 +9,7 @@ interface RunOptions {
   sourceAddress: string;
   method: string;
   args: Parameters<typeof invokeContract>[3];
-  sign: (xdr: string) => Promise<string>;
+  sign: (xdr: string, sourceAddress: string) => Promise<string>;
 }
 
 export function useSubmitAction() {

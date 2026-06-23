@@ -1,3 +1,5 @@
+import * as StellarSdk from "@stellar/stellar-sdk";
+
 export type ErrorCategory =
   | "wallet"
   | "contract"
@@ -21,8 +23,57 @@ const CONTRACT_ERRORS: Record<number, ClassifiedError> = {
   7: { id: "invalid_duration", category: "contract", message: "Auction duration must be greater than zero." },
 };
 
+const TX_RESULT_ERRORS: Record<string, ClassifiedError> = {
+  txBadAuth: {
+    id: "tx_bad_auth",
+    category: "transaction",
+    message:
+      "Transaction signature is invalid. Reconnect your wallet, switch Freighter to Testnet, and try again.",
+  },
+  txBadSeq: {
+    id: "tx_bad_seq",
+    category: "transaction",
+    message: "Account sequence is out of date. Please retry the transaction.",
+  },
+  txInsufficientFee: {
+    id: "insufficient_fee",
+    category: "transaction",
+    message: "Transaction fee is too low. Please retry.",
+  },
+  txTooEarly: {
+    id: "tx_too_early",
+    category: "transaction",
+    message: "Transaction time bounds are invalid. Please retry.",
+  },
+};
+
+function parseTxSubmissionError(message: string): ClassifiedError | null {
+  const match = message.match(/tx_submission_failed:\s*(\S+)/);
+  if (!match) return null;
+
+  try {
+    const result = StellarSdk.xdr.TransactionResult.fromXDR(match[1], "base64");
+    const code = result.result().switch().name;
+    return (
+      TX_RESULT_ERRORS[code] ?? {
+        id: "tx_submission_failed",
+        category: "transaction",
+        message: `Transaction was rejected by the network (${code}).`,
+      }
+    );
+  } catch {
+    return {
+      id: "tx_submission_failed",
+      category: "transaction",
+      message: "Transaction submission failed. Please retry.",
+    };
+  }
+}
+
 function fromMessage(message: string): ClassifiedError | null {
   const lower = message.toLowerCase();
+  const txError = parseTxSubmissionError(message);
+  if (txError) return txError;
   if (lower.includes("not installed") || lower.includes("wallet not found") || lower.includes("no wallet")) {
     return { id: "wallet_not_found", category: "wallet", message: "Install Freighter, xBull, or Lobstr to continue." };
   }
@@ -34,6 +85,20 @@ function fromMessage(message: string): ClassifiedError | null {
   }
   if (lower.includes("wrong network") || lower.includes("network mismatch")) {
     return { id: "wrong_network", category: "wallet", message: "Wallet is connected to the wrong network. Switch to testnet." };
+  }
+  if (lower.includes("wallet_address_mismatch")) {
+    return {
+      id: "wallet_address_mismatch",
+      category: "wallet",
+      message: "Wallet account changed. Reconnect your wallet and try again.",
+    };
+  }
+  if (lower.includes("tx_not_signed")) {
+    return {
+      id: "tx_not_signed",
+      category: "wallet",
+      message: "Wallet did not sign the transaction. Approve the request in your wallet and try again.",
+    };
   }
   if (lower.includes("not funded") || lower.includes("account not found")) {
     return { id: "account_not_found", category: "transaction", message: "Account not found. Fund it with Friendbot first." };
