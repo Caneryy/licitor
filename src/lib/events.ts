@@ -2,17 +2,36 @@ import * as StellarSdk from "@stellar/stellar-sdk";
 import { rpc } from "./stellar";
 import type { ParsedBidEvent } from "./types";
 
+const POLL_LEDGER_LOOKBACK = 500;
+
+function encodeSymbolTopic(symbol: string): string {
+  return StellarSdk.xdr.ScVal.scvSymbol(symbol).toXDR("base64");
+}
+
+function normalizeEventValue(value: unknown): unknown {
+  if (typeof value === "string") {
+    return StellarSdk.scValToNative(StellarSdk.xdr.ScVal.fromXDR(value, "base64"));
+  }
+  if (value && typeof value === "object" && "_switch" in value) {
+    return StellarSdk.scValToNative(value as unknown as StellarSdk.xdr.ScVal);
+  }
+  return value;
+}
+
 function parseEventValue(value: unknown): {
   auction_id: number;
   bidder: string;
   amount: bigint | number;
   ledger: number;
 } | null {
-  if (!value || typeof value !== "object") return null;
-  const record = value as Record<string, unknown>;
+  const normalized = normalizeEventValue(value);
+  if (!normalized || typeof normalized !== "object") return null;
+
+  const record = normalized as Record<string, unknown>;
   if (!("auction_id" in record) || !("bidder" in record) || !("amount" in record)) {
     return null;
   }
+
   return {
     auction_id: Number(record.auction_id),
     bidder: String(record.bidder),
@@ -24,17 +43,19 @@ function parseEventValue(value: unknown): {
 export async function fetchBidEvents(
   contractId: string,
   auctionId: number,
-  startLedger: number,
-): Promise<{ events: ParsedBidEvent[]; latestLedger: number }> {
+): Promise<ParsedBidEvent[]> {
   const latest = await rpc.getLatestLedger();
+  const endLedger = latest.sequence;
+  const startLedger = Math.max(1, endLedger - POLL_LEDGER_LOOKBACK);
+
   const response = await rpc.getEvents({
     startLedger,
-    endLedger: latest.sequence,
+    endLedger,
     filters: [
       {
         type: "contract",
         contractIds: [contractId],
-        topics: [["bid_placed"]],
+        topics: [[encodeSymbolTopic("bid_placed")]],
       },
     ],
   });
@@ -42,18 +63,7 @@ export async function fetchBidEvents(
   const events: ParsedBidEvent[] = [];
 
   for (const event of response.events) {
-    let parsedValue: unknown = event.value;
-    if (typeof event.value === "string") {
-      try {
-        parsedValue = StellarSdk.scValToNative(
-          StellarSdk.xdr.ScVal.fromXDR(event.value, "base64"),
-        );
-      } catch {
-        parsedValue = event.value;
-      }
-    }
-
-    const body = parseEventValue(parsedValue);
+    const body = parseEventValue(event.value);
     if (!body || body.auction_id !== auctionId) continue;
 
     events.push({
@@ -66,8 +76,5 @@ export async function fetchBidEvents(
     });
   }
 
-  return {
-    events,
-    latestLedger: response.latestLedger ?? latest.sequence,
-  };
+  return events;
 }

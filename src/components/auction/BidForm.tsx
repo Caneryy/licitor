@@ -9,11 +9,11 @@ import { useBalance } from "../../hooks/useBalance";
 import { buildPlaceBidArgs } from "../../lib/auction";
 import { validationErrors } from "../../lib/errors";
 import { stroopsToXlm, xlmToStroops } from "../../lib/format";
-import type { Auction } from "../../lib/types";
+import type { Auction, PlacedBid } from "../../lib/types";
 
 interface BidFormProps {
   auction: Auction;
-  onBidPlaced: () => void;
+  onBidPlaced: (bid: PlacedBid) => void;
 }
 
 export function BidForm({ auction, onBidPlaced }: BidFormProps) {
@@ -53,13 +53,18 @@ export function BidForm({ auction, onBidPlaced }: BidFormProps) {
     }
 
     try {
-      await run({
+      const result = await run({
         sourceAddress: address,
         method: "place_bid",
         args: buildPlaceBidArgs(address, auction.id, stroops),
         sign,
       });
-      onBidPlaced();
+      onBidPlaced({
+        auctionId: auction.id,
+        bidder: address,
+        amount: stroops,
+        txHash: result.hash,
+      });
     } catch {
       // Error handled by hook.
     }

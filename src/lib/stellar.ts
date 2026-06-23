@@ -24,6 +24,6 @@ export function getContractId(): string {
   return id;
 }
 
-export const EVENT_FETCH_INTERVAL_MS = 5000;
-export const SYNC_CHANNEL_NAME = "licitor-auction-sync";
+export const EVENT_FETCH_INTERVAL_MS = 2000;
+export const DETAIL_POLL_INTERVAL_MS = 2000;
 export const MIN_FEE_XLM = 0.5;

@@ -8,12 +8,12 @@ import { TxStatusButton } from "../components/feedback/TxStatusButton";
 import { TxSuccessCard } from "../components/feedback/TxSuccessCard";
 import { useAuctionDetail } from "../hooks/useAuctions";
 import { useAuctionEvents } from "../hooks/useAuctionEvents";
-import { useAuctionSync } from "../hooks/useAuctionSync";
 import { useSubmitAction } from "../hooks/useSubmitAction";
 import { useStellarWallet } from "../hooks/useStellarWallet";
 import { buildFinalizeArgs } from "../lib/auction";
 import { stroopsToXlm, truncateMiddle } from "../lib/format";
 import { Badge } from "../components/ui/Badge";
+import type { PlacedBid } from "../lib/types";
 
 interface AuctionDetailViewProps {
   auctionId: number;
@@ -22,9 +22,12 @@ interface AuctionDetailViewProps {
 
 export function AuctionDetailView({ auctionId, onBack }: AuctionDetailViewProps) {
   const { address, sign } = useStellarWallet();
-  const { auction, bids, loading, error, refreshDetail } = useAuctionDetail(auctionId);
+  const { auction, bids, loading, error, refreshDetail } = useAuctionDetail(auctionId, undefined, true);
   const listenerEnabled = auction?.status === "Active";
-  const { events: liveEvents, live } = useAuctionEvents(auctionId, listenerEnabled);
+  const { events: liveEvents, live, pushBidEvent, refreshEvents } = useAuctionEvents(
+    auctionId,
+    listenerEnabled,
+  );
   const finalizeAction = useSubmitAction();
 
   const mergedBids = useMemo(() => {
@@ -36,13 +39,10 @@ export function AuctionDetailView({ auctionId, onBack }: AuctionDetailViewProps)
     }));
   }, [bids, liveEvents]);
 
-  const { notify } = useAuctionSync(() => {
+  const handleBidPlaced = (bid: PlacedBid) => {
+    pushBidEvent(bid);
     void refreshDetail();
-  }, Boolean(auction));
-
-  const handleBidPlaced = () => {
-    notify(auctionId);
-    void refreshDetail();
+    void refreshEvents();
   };
 
   const handleFinalize = async () => {
@@ -54,8 +54,8 @@ export function AuctionDetailView({ auctionId, onBack }: AuctionDetailViewProps)
         args: buildFinalizeArgs(address, auction.id),
         sign,
       });
-      notify(auctionId);
       void refreshDetail();
+      void refreshEvents();
     } catch {
       // handled in hook
     }

@@ -19,6 +19,14 @@ export interface BidEntry {
   txHash?: string;
 }
 
+export interface PlacedBid {
+  auctionId: number;
+  bidder: string;
+  amount: bigint;
+  txHash: string;
+  ledger?: number;
+}
+
 export interface ParsedBidEvent {
   id: string;
   auctionId: number;
