@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "../ui/Input";
 import { ErrorBanner } from "../feedback/ErrorBanner";
 import { TxStatusButton } from "../feedback/TxStatusButton";
@@ -9,7 +9,7 @@ import { useBalance } from "../../hooks/useBalance";
 import { buildPlaceBidArgs } from "../../lib/auction";
 import { validationErrors } from "../../lib/errors";
 import { isBiddingOpen } from "../../lib/auctionDisplay";
-import { stroopsToXlm, xlmToStroops } from "../../lib/format";
+import { suggestedNextBidXlm, xlmToStroops } from "../../lib/format";
 import { AnimatedHighestBid } from "./AnimatedHighestBid";
 import { useAuctionNow } from "./AuctionStatus";
 import type { Auction, PlacedBid } from "../../lib/types";
@@ -26,9 +26,23 @@ export function BidForm({ auction, onBidPlaced }: BidFormProps) {
   const now = useAuctionNow();
   const biddingOpen = isBiddingOpen(auction, now);
 
-  const minBid = auction.highestBid + 1n;
-  const [amount, setAmount] = useState(stroopsToXlm(minBid));
+  const [amount, setAmount] = useState(() => suggestedNextBidXlm(auction.highestBid));
   const [localError, setLocalError] = useState<string | null>(null);
+
+  const handleReset = () => {
+    reset();
+    setAmount(suggestedNextBidXlm(auction.highestBid));
+  };
+
+  useEffect(() => {
+    try {
+      if (xlmToStroops(amount) <= auction.highestBid) {
+        setAmount(suggestedNextBidXlm(auction.highestBid));
+      }
+    } catch {
+      setAmount(suggestedNextBidXlm(auction.highestBid));
+    }
+  }, [auction.highestBid]);
 
   const handleSubmit = async () => {
     setLocalError(null);
@@ -98,10 +112,13 @@ export function BidForm({ auction, onBidPlaced }: BidFormProps) {
       <label className="block space-y-2 text-sm font-bold">
         Your bid (XLM)
         <Input value={amount} onChange={(e) => setAmount(e.target.value)} disabled={disabled} />
+        <span className="block text-xs font-normal text-neutral-700">
+          Minimum: {suggestedNextBidXlm(auction.highestBid)} XLM
+        </span>
       </label>
 
       {phase === "success" && txHash ? (
-        <TxSuccessCard hash={txHash} onReset={reset} />
+        <TxSuccessCard hash={txHash} onReset={handleReset} resetLabel="Place another bid" />
       ) : (
         <TxStatusButton phase={phase} idleLabel="Place bid" onClick={() => void handleSubmit()} disabled={disabled} />
       )}

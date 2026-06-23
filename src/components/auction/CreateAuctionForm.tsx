@@ -94,7 +94,7 @@ export function CreateAuctionForm({ onCreated }: CreateAuctionFormProps) {
       </label>
 
       {phase === "success" && txHash ? (
-        <TxSuccessCard hash={txHash} onReset={reset} />
+        <TxSuccessCard hash={txHash} onReset={reset} resetLabel="Create another auction" />
       ) : (
         <TxStatusButton phase={phase} idleLabel="Create auction" onClick={() => void handleSubmit()} />
       )}

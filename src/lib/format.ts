@@ -20,6 +20,13 @@ export function stroopsToXlm(stroops: bigint): string {
   return negative ? `-${formatted}` : formatted;
 }
 
+export function suggestedNextBidXlm(highest: bigint): string {
+  const oneXlm = STROOPS_PER_XLM;
+  if (highest < oneXlm) return stroopsToXlm(oneXlm);
+  const nextWhole = (highest / oneXlm + 1n) * oneXlm;
+  return stroopsToXlm(nextWhole);
+}
+
 export function truncateMiddle(value: string, head = 6, tail = 4): string {
   if (value.length <= head + tail + 3) return value;
   return `${value.slice(0, head)}…${value.slice(-tail)}`;
