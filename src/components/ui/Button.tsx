@@ -8,7 +8,7 @@ export function Button({ variant = "primary", className = "", ...props }: Button
   const styles =
     variant === "primary"
       ? "neo-button px-4 py-3 min-h-11"
-      : "border-2 border-[var(--border)] bg-[var(--surface)] px-4 py-3 min-h-11 shadow-[2px_2px_0_var(--ink)]";
+      : "neo-button-ghost px-4 py-3 min-h-11";
 
   return <button className={`${styles} ${className}`} {...props} />;
 }

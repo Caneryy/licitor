@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Input } from "../ui/Input";
 import { ErrorBanner } from "../feedback/ErrorBanner";
+import { InfoBanner } from "../feedback/InfoBanner";
 import { TxStatusButton } from "../feedback/TxStatusButton";
 import { TxSuccessCard } from "../feedback/TxSuccessCard";
 import { useSubmitAction } from "../../hooks/useSubmitAction";
@@ -107,12 +108,30 @@ export function BidForm({ auction, onBidPlaced }: BidFormProps) {
       <p className="text-sm">
         Current highest: <AnimatedHighestBid amount={auction.highestBid} />
       </p>
+
+      {!connected && <InfoBanner message="Connect your wallet to place a bid." />}
+      {connected && !biddingOpen && (
+        <InfoBanner
+          message={
+            auction.status === "Ended"
+              ? "This auction has ended."
+              : "Bidding is closed for this auction."
+          }
+        />
+      )}
       <ErrorBanner message={localError ?? error?.message ?? ""} onDismiss={() => setLocalError(null)} />
 
       <label className="block space-y-2 text-sm font-bold">
         Your bid (XLM)
-        <Input value={amount} onChange={(e) => setAmount(e.target.value)} disabled={disabled} />
-        <span className="block text-xs font-normal text-neutral-700">
+        <Input
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          disabled={disabled}
+          inputMode="decimal"
+          min="0"
+          step="any"
+        />
+        <span className="block text-xs font-normal text-[var(--ink-muted)]">
           Minimum: {suggestedNextBidXlm(auction.highestBid)} XLM
         </span>
       </label>

@@ -21,7 +21,7 @@ export function TxSuccessCard({
         </span>
         <div className="min-w-0 flex-1 space-y-1">
           <p className="tx-success-title">Transaction confirmed</p>
-          <p className="text-xs text-neutral-700">
+          <p className="text-xs text-[var(--ink-muted)]">
             Hash: <span className="font-mono font-bold">{truncateMiddle(hash, 8, 8)}</span>
           </p>
         </div>

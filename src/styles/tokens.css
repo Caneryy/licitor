@@ -1,6 +1,7 @@
 :root {
   --paper: #f5f0e8;
   --ink: #1a1a1a;
+  --ink-muted: color-mix(in srgb, var(--ink) 62%, transparent);
   --accent: #e85d04;
   --accent-muted: #f48c06;
   --surface: #ffffff;

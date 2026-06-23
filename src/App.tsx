@@ -37,7 +37,9 @@ export default function App() {
         goTo({ view });
       }}
     >
-      {route.view === "auctions" && <AuctionListView onOpen={openAuction} />}
+      {route.view === "auctions" && (
+        <AuctionListView onOpen={openAuction} onCreate={() => goTo({ view: "create" })} />
+      )}
       {route.view === "create" && (
         <CreateAuctionView
           onCreated={(auctionId) => {

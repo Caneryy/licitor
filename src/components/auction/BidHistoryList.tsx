@@ -30,7 +30,15 @@ export function BidHistoryList({ auctionId, bids, live = false }: BidHistoryList
       )}
 
       {bids.length === 0 ? (
-        <p className="text-sm text-neutral-700">No bids yet.</p>
+        <div className="rounded-none border-2 border-dashed border-[var(--border)] bg-[var(--paper)] p-6 text-center">
+          <p className="text-2xl" aria-hidden="true">
+            ◇
+          </p>
+          <p className="mt-2 font-bold">No bids yet</p>
+          <p className="mt-1 text-sm text-[var(--ink-muted)]">
+            Be the first to place a bid on this auction.
+          </p>
+        </div>
       ) : (
         <ul className="space-y-3">
           {bids.map((bid) => {
@@ -51,7 +59,7 @@ export function BidHistoryList({ auctionId, bids, live = false }: BidHistoryList
                     {stroopsToXlm(bid.amount)} XLM
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-neutral-700">{formatDateTime(bid.timestamp)}</p>
+                <p className="mt-1 text-xs text-[var(--ink-muted)]">{formatDateTime(bid.timestamp)}</p>
                 {bid.txHash && (
                   <a
                     href={getExplorerTxUrl(bid.txHash)}

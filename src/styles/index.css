@@ -70,6 +70,37 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.neo-button-ghost {
+  border: 2px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.neo-button-ghost:hover:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+.neo-button-ghost:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.neo-card-interactive {
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.neo-card-interactive:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
 .neo-input {
   border: 2px solid var(--border);
   background: var(--surface);
@@ -228,4 +259,96 @@ button:disabled {
 
 .highest-bid-flash {
   animation: highest-bid-flash 1.2s ease-out;
+}
+
+.skeleton {
+  border-radius: 0;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--ink) 8%, var(--paper)) 25%,
+    color-mix(in srgb, var(--ink) 14%, var(--paper)) 50%,
+    color-mix(in srgb, var(--ink) 8%, var(--paper)) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.info-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  border: 2px solid var(--border);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  padding: 0.75rem 1rem;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.info-banner-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  border: 2px solid var(--accent);
+  background: var(--accent);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.tx-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.5rem;
+  border: 2px solid color-mix(in srgb, white 40%, transparent);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: tx-spin 700ms linear infinite;
+  vertical-align: -0.15em;
+}
+
+@keyframes tx-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+.neo-card-interactive:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-pulse,
+  .bid-item-new,
+  .bid-amount-pop,
+  .bid-new-badge,
+  .bid-toast,
+  .highest-bid-flash,
+  .tx-success-card,
+  .skeleton,
+  .tx-spinner {
+    animation: none !important;
+  }
+
+  .neo-button:hover:not(:disabled),
+  .neo-button-ghost:hover:not(:disabled),
+  .neo-card-interactive:hover {
+    transform: none;
+  }
 }

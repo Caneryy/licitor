@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Input } from "../ui/Input";
 import { ErrorBanner } from "../feedback/ErrorBanner";
+import { InfoBanner } from "../feedback/InfoBanner";
 import { TxStatusButton } from "../feedback/TxStatusButton";
 import { TxSuccessCard } from "../feedback/TxSuccessCard";
 import { useSubmitAction } from "../../hooks/useSubmitAction";
@@ -72,16 +73,33 @@ export function CreateAuctionForm({ onCreated }: CreateAuctionFormProps) {
       }}
     >
       <h2 className="text-2xl font-black">Create Auction</h2>
+      <p className="text-sm text-[var(--ink-muted)]">
+        List an item on Stellar testnet. Set a starting bid and duration. Bidding starts immediately.
+      </p>
+
+      {!connected && <InfoBanner message="Connect your wallet to create an auction." />}
       <ErrorBanner message={localError ?? error?.message ?? ""} onDismiss={() => setLocalError(null)} />
 
       <label className="block space-y-2 text-sm font-bold">
         Title
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} disabled={disabled} />
+        <Input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          disabled={disabled}
+          placeholder="e.g. Vintage camera"
+        />
       </label>
 
       <label className="block space-y-2 text-sm font-bold">
         Starting bid (XLM)
-        <Input value={startingBid} onChange={(e) => setStartingBid(e.target.value)} disabled={disabled} />
+        <Input
+          value={startingBid}
+          onChange={(e) => setStartingBid(e.target.value)}
+          disabled={disabled}
+          inputMode="decimal"
+          min="0"
+          step="any"
+        />
       </label>
 
       <label className="block space-y-2 text-sm font-bold">
@@ -90,6 +108,9 @@ export function CreateAuctionForm({ onCreated }: CreateAuctionFormProps) {
           value={durationMinutes}
           onChange={(e) => setDurationMinutes(e.target.value)}
           disabled={disabled}
+          inputMode="numeric"
+          min="1"
+          step="1"
         />
       </label>
 

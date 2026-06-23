@@ -1,4 +1,4 @@
-# Licitor — Real-time Auction
+# Licitor - Real-time Auction
 
 Stellar testnet live bidding dApp built with Soroban, StellarWalletsKit, and cursor-based `getEvents` synchronization.
 

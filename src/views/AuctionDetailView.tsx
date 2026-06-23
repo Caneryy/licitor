@@ -5,15 +5,17 @@ import { BidForm } from "../components/auction/BidForm";
 import { BidHistoryList } from "../components/auction/BidHistoryList";
 import { AnimatedHighestBid } from "../components/auction/AnimatedHighestBid";
 import { ErrorBanner } from "../components/feedback/ErrorBanner";
+import { LoadingSkeleton } from "../components/feedback/LoadingSkeleton";
 import { TxStatusButton } from "../components/feedback/TxStatusButton";
 import { TxSuccessCard } from "../components/feedback/TxSuccessCard";
+import { Button } from "../components/ui/Button";
 import { useAuctionDetail } from "../hooks/useAuctions";
 import { useAuctionEvents } from "../hooks/useAuctionEvents";
 import { useSubmitAction } from "../hooks/useSubmitAction";
 import { useStellarWallet } from "../hooks/useStellarWallet";
 import { buildFinalizeArgs } from "../lib/auction";
 import { getAuctionPhase } from "../lib/auctionDisplay";
-import { truncateMiddle } from "../lib/format";
+import { formatDateTime, stroopsToXlm, truncateMiddle } from "../lib/format";
 import { auctionUrl } from "../lib/routes";
 import type { PlacedBid } from "../lib/types";
 
@@ -24,6 +26,7 @@ interface AuctionDetailViewProps {
 
 export function AuctionDetailView({ auctionId, onBack }: AuctionDetailViewProps) {
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState<string | null>(null);
   const { address, sign } = useStellarWallet();
   const { auction, bids, loading, error, refreshDetail } = useAuctionDetail(auctionId, undefined, true);
   const listenerEnabled = auction ? getAuctionPhase(auction) === "live" : false;
@@ -67,51 +70,87 @@ export function AuctionDetailView({ auctionId, onBack }: AuctionDetailViewProps)
   };
 
   if (loading && !auction) {
-    return <p className="text-sm">Loading auction…</p>;
+    return <LoadingSkeleton variant="detail" />;
   }
 
   if (!auction) {
-    return <ErrorBanner message={error ?? "Auction not found."} />;
+    return (
+      <div className="space-y-4">
+        <Button type="button" variant="ghost" onClick={onBack}>
+          ← Back to auctions
+        </Button>
+        <ErrorBanner message={error ?? "Auction not found."} />
+      </div>
+    );
   }
 
-  const canFinalize = auction ? getAuctionPhase(auction) === "expired" : false;
+  const phase = getAuctionPhase(auction);
+  const canFinalize = phase === "expired";
 
   const copyShareLink = async () => {
+    setCopyError(null);
     try {
       await navigator.clipboard.writeText(auctionUrl(auctionId));
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Clipboard may be blocked; the URL is still visible in the address bar.
+      setCopyError("Could not copy link. Copy the URL from your browser address bar.");
     }
   };
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <button type="button" className="font-bold underline" onClick={onBack}>
+        <Button type="button" variant="ghost" onClick={onBack}>
           ← Back to auctions
-        </button>
-        <button type="button" className="neo-button px-3 py-2 text-sm" onClick={() => void copyShareLink()}>
-          {copied ? "Link copied" : "Copy share link"}
-        </button>
+        </Button>
+        <Button type="button" variant="ghost" onClick={() => void copyShareLink()}>
+          {copied ? "Link copied ✓" : "Copy share link"}
+        </Button>
       </div>
+      {copyError && <ErrorBanner message={copyError} onDismiss={() => setCopyError(null)} />}
 
-      <section className="neo-card space-y-3 p-4">
+      <section className="neo-card space-y-3 p-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-3xl font-black">{auction.title}</h2>
           <AuctionStatusBadge auction={auction} />
         </div>
-        <p className="text-sm">
-          Seller: <strong>{truncateMiddle(auction.seller, 8, 6)}</strong>
-        </p>
-        <p className="text-sm">
-          Highest bid: <AnimatedHighestBid amount={auction.highestBid} />
-        </p>
-        <p className="text-sm">
-          {getAuctionPhase(auction) === "live" ? "Ends in" : "Status"}:{" "}
-          <AuctionCountdown auction={auction} />
-        </p>
+        <dl className="grid gap-2 text-sm sm:grid-cols-2">
+          <div>
+            <dt className="text-[var(--ink-muted)]">Seller</dt>
+            <dd className="font-bold">{truncateMiddle(auction.seller, 8, 6)}</dd>
+          </div>
+          <div>
+            <dt className="text-[var(--ink-muted)]">Starting bid</dt>
+            <dd className="font-bold">{stroopsToXlm(auction.startingBid)} XLM</dd>
+          </div>
+          <div>
+            <dt className="text-[var(--ink-muted)]">Highest bid</dt>
+            <dd className="font-bold">
+              <AnimatedHighestBid amount={auction.highestBid} />
+            </dd>
+          </div>
+          <div>
+            <dt className="text-[var(--ink-muted)]">Leading bidder</dt>
+            <dd className="font-bold">
+              {auction.highestBidder
+                ? truncateMiddle(auction.highestBidder, 8, 6)
+                : "No bids yet"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-[var(--ink-muted)]">Ends at</dt>
+            <dd className="font-bold">{formatDateTime(auction.endTime)}</dd>
+          </div>
+          <div>
+            <dt className="text-[var(--ink-muted)]">
+              {phase === "live" ? "Time remaining" : "Status"}
+            </dt>
+            <dd className="font-bold">
+              <AuctionCountdown auction={auction} />
+            </dd>
+          </div>
+        </dl>
       </section>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -122,6 +161,9 @@ export function AuctionDetailView({ auctionId, onBack }: AuctionDetailViewProps)
       {canFinalize && (
         <section className="neo-card space-y-3 p-4">
           <h3 className="text-xl font-black">Finalize Auction</h3>
+          <p className="text-sm text-[var(--ink-muted)]">
+            Bidding has closed. Finalize to settle the winner on-chain.
+          </p>
           <ErrorBanner message={finalizeAction.error?.message ?? ""} />
           {finalizeAction.phase === "success" && finalizeAction.txHash ? (
             <TxSuccessCard hash={finalizeAction.txHash} onReset={finalizeAction.reset} />

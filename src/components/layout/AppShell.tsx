@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { AppView } from "../../lib/types";
+import { Button } from "../ui/Button";
 import { ConnectWallet } from "../wallet/ConnectWallet";
 import { WalletBar } from "./WalletBar";
 
@@ -23,19 +24,21 @@ export function AppShell({ view, onNavigate, children }: AppShellProps) {
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent)]">Licitor</p>
             <h1 className="text-3xl font-black">Real-time Auction</h1>
           </div>
-          <nav className="flex flex-wrap gap-2">
-            {NAV.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onNavigate(item.id)}
-                className={`border-2 border-[var(--border)] px-4 py-2 font-bold ${
-                  view === item.id ? "bg-[var(--accent)] text-white" : "bg-[var(--surface)]"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
+          <nav className="flex flex-wrap gap-2" aria-label="Main navigation">
+            {NAV.map((item) => {
+              const isActive = view === item.id || (view === "detail" && item.id === "auctions");
+              return (
+                <Button
+                  key={item.id}
+                  type="button"
+                  variant={isActive ? "primary" : "ghost"}
+                  onClick={() => onNavigate(item.id)}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  {item.label}
+                </Button>
+              );
+            })}
           </nav>
           <ConnectWallet />
         </div>

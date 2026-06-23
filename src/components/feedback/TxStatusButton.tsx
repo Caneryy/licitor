@@ -41,7 +41,14 @@ export function TxStatusButton({
       disabled={disabled || isBusy}
       aria-live="polite"
     >
-      {isBusy ? `⏳ ${label}` : label}
+      {isBusy ? (
+        <>
+          <span className="tx-spinner" aria-hidden="true" />
+          {label}
+        </>
+      ) : (
+        label
+      )}
     </button>
   );
 }
