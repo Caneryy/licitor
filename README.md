@@ -46,6 +46,37 @@ Deployed testnet contract for this repo:
 npm run dev
 ```
 
+## Deploy to Vercel
+
+Licitor is a Vite SPA. Client-side routes (`/auctions`, `/auction/:id`, `/privacy`, etc.) need a fallback rewrite to `index.html`, which is configured in `vercel.json`.
+
+### Option A: Vercel Dashboard
+
+1. Import the Git repository at [vercel.com/new](https://vercel.com/new)
+2. Framework preset: **Vite** (auto-detected)
+3. Add environment variables:
+   - `VITE_CONTRACT_ID` = your deployed Soroban contract ID
+   - `VITE_STELLAR_NETWORK` = `testnet`
+4. Deploy
+
+### Option B: Vercel CLI
+
+```bash
+npm i -g vercel
+vercel login
+vercel
+```
+
+Set the same environment variables when prompted, or in the project settings:
+
+```bash
+vercel env add VITE_CONTRACT_ID
+vercel env add VITE_STELLAR_NETWORK
+vercel --prod
+```
+
+After deployment, open routes like `/`, `/auctions`, and `/privacy` to confirm SPA routing works.
+
 ## Demo: live bidding across browsers
 
 1. Open the same auction detail page in Browser A and Browser B
