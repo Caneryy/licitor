@@ -1,7 +1,7 @@
 #![no_std]
 use soroban_sdk::{
-    contract, contractclient, contracterror, contractevent, contractimpl, contracttype, Address, Env,
-    String, Vec,
+    contract, contractclient, contracterror, contractevent, contractimpl, contracttype, Address,
+    Env, String, Vec,
 };
 
 const MIN_TTL: u32 = 17_280;
@@ -98,13 +98,7 @@ pub trait EscrowContract {
         previous_amount: i128,
     );
 
-    fn settle(
-        env: Env,
-        auction_id: u32,
-        seller: Address,
-        winner: Option<Address>,
-        amount: i128,
-    );
+    fn settle(env: Env, auction_id: u32, seller: Address, winner: Option<Address>, amount: i128);
 }
 
 #[contract]
@@ -117,9 +111,7 @@ impl Contract {
             .instance()
             .set(&DataKey::Escrow, &escrow_address);
         env.storage().instance().set(&DataKey::AuctionCount, &0u32);
-        env.storage()
-            .instance()
-            .extend_ttl(MIN_TTL, EXTEND_TO);
+        env.storage().instance().extend_ttl(MIN_TTL, EXTEND_TO);
     }
 
     pub fn create_auction(
@@ -173,15 +165,9 @@ impl Contract {
         env.storage()
             .instance()
             .set(&DataKey::AuctionCount, &auction_id);
-        env.storage()
-            .instance()
-            .extend_ttl(MIN_TTL, EXTEND_TO);
+        env.storage().instance().extend_ttl(MIN_TTL, EXTEND_TO);
 
-        AuctionCreatedEvent {
-            auction_id,
-            seller,
-        }
-        .publish(&env);
+        AuctionCreatedEvent { auction_id, seller }.publish(&env);
 
         Ok(auction_id)
     }
@@ -274,9 +260,7 @@ impl Contract {
         }
 
         env.storage().persistent().set(&auction_key, &auction);
-        env.storage()
-            .persistent()
-            .set(&history_key, &new_history);
+        env.storage().persistent().set(&history_key, &new_history);
         env.storage()
             .persistent()
             .extend_ttl(&auction_key, MIN_TTL, EXTEND_TO);
@@ -335,12 +319,7 @@ impl Contract {
             .get(&DataKey::Escrow)
             .ok_or(ContractError::EscrowFailed)?;
         let escrow = EscrowClient::new(&env, &escrow_address);
-        escrow.settle(
-            &auction_id,
-            &auction.seller,
-            &winner,
-            &settle_amount,
-        );
+        escrow.settle(&auction_id, &auction.seller, &winner, &settle_amount);
 
         auction.status = AuctionStatus::Ended;
 
@@ -349,11 +328,7 @@ impl Contract {
             .persistent()
             .extend_ttl(&auction_key, MIN_TTL, EXTEND_TO);
 
-        AuctionFinalizedEvent {
-            auction_id,
-            winner,
-        }
-        .publish(&env);
+        AuctionFinalizedEvent { auction_id, winner }.publish(&env);
 
         Ok(())
     }

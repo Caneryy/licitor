@@ -63,9 +63,7 @@ impl Contract {
         env.storage()
             .instance()
             .set(&DataKey::TokenContract, &token_contract);
-        env.storage()
-            .instance()
-            .extend_ttl(MIN_TTL, EXTEND_TO);
+        env.storage().instance().extend_ttl(MIN_TTL, EXTEND_TO);
     }
 
     pub fn set_auction_contract(
@@ -88,9 +86,7 @@ impl Contract {
         env.storage()
             .instance()
             .set(&DataKey::AuctionContract, &auction);
-        env.storage()
-            .instance()
-            .extend_ttl(MIN_TTL, EXTEND_TO);
+        env.storage().instance().extend_ttl(MIN_TTL, EXTEND_TO);
         Ok(())
     }
 
@@ -181,7 +177,11 @@ impl Contract {
 
     pub fn get_locked_balance(env: Env, auction_id: u32, bidder: Address) -> i128 {
         let lock_key = DataKey::HighestLock(auction_id);
-        if let Some(record) = env.storage().persistent().get::<DataKey, LockRecord>(&lock_key) {
+        if let Some(record) = env
+            .storage()
+            .persistent()
+            .get::<DataKey, LockRecord>(&lock_key)
+        {
             if record.bidder == bidder {
                 return record.amount;
             }
