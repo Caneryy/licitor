@@ -11,8 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - name: Install Stellar CLI
-        run: cargo install stellar-cli --locked
+      - uses: stellar/stellar-cli@v27.0.0
       - name: Format check
         run: cargo fmt --all -- --check
       - name: Contract tests
