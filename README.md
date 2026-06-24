@@ -7,6 +7,20 @@ Stellar testnet live bidding dApp with **escrow-backed USDC bids**, Soroban inte
 
 **Production:** [https://licitor-psi.vercel.app](https://licitor-psi.vercel.app)
 
+## Demo
+
+<video src="docs/demo-video.mp4" controls width="100%"></video>
+
+## Screenshots
+
+| Landing | Auctions |
+|---------|----------|
+| ![Landing page](docs/screenshots/00-landinpage.png) | ![Auctions list](docs/screenshots/01-auctions.png) |
+
+| Create auction | Auction detail |
+|----------------|----------------|
+| ![Create auction](docs/screenshots/02-create-auction.png) | ![Auction detail](docs/screenshots/03-auction-detail.png) |
+
 ## Features
 
 - **Escrow + SAC payments** — bids lock testnet USDC; outbid users refunded on-chain
@@ -22,9 +36,17 @@ Stellar testnet live bidding dApp with **escrow-backed USDC bids**, Soroban inte
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for contract APIs, event flow, and security decisions.
 
-## Demo
+## Deployed contracts (testnet)
 
-Follow [docs/DEMO.md](docs/DEMO.md) for a 5-minute live presentation script.
+Deployed: **2026-06-24**
+
+| Contract | Address |
+|----------|---------|
+| Auction | [`CDNNII2NQ34FO6A2IBCHSTKJW7L5PPXMQ5IDAWUQ5VJ5ELEEFIAXZ4UB`](https://stellar.expert/explorer/testnet/contract/CDNNII2NQ34FO6A2IBCHSTKJW7L5PPXMQ5IDAWUQ5VJ5ELEEFIAXZ4UB) |
+| Escrow | [`CDMCXTJ5S7XOLSVGBFYTL5GFEQAH2ZASXEO47OMZAEWP7EXW4WYSNVIW`](https://stellar.expert/explorer/testnet/contract/CDMCXTJ5S7XOLSVGBFYTL5GFEQAH2ZASXEO47OMZAEWP7EXW4WYSNVIW) |
+| USDC (SAC) | [`CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA`](https://stellar.expert/explorer/testnet/contract/CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA) |
+
+Legacy pre-escrow auction: [`CBKLZBSTFM5YQ27LRDHDA4VTEY4CDCWVSHKOYWZN2X7AIKBKVRRPFGBQ`](https://stellar.expert/explorer/testnet/contract/CBKLZBSTFM5YQ27LRDHDA4VTEY4CDCWVSHKOYWZN2X7AIKBKVRRPFGBQ)
 
 ## Prerequisites
 
@@ -39,13 +61,13 @@ npm install
 cp .env.example .env
 ```
 
-After deploying contracts (see below), set:
+Set env vars (values from `deployments/testnet.json`):
 
 ```
-VITE_AUCTION_CONTRACT_ID=<auction_id>
-VITE_ESCROW_CONTRACT_ID=<escrow_id>
-VITE_TOKEN_CONTRACT_ID=<usdc_sac_id>
-VITE_CONTRACT_ID=<auction_id>
+VITE_AUCTION_CONTRACT_ID=CDNNII2NQ34FO6A2IBCHSTKJW7L5PPXMQ5IDAWUQ5VJ5ELEEFIAXZ4UB
+VITE_ESCROW_CONTRACT_ID=CDMCXTJ5S7XOLSVGBFYTL5GFEQAH2ZASXEO47OMZAEWP7EXW4WYSNVIW
+VITE_TOKEN_CONTRACT_ID=CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA
+VITE_CONTRACT_ID=CDNNII2NQ34FO6A2IBCHSTKJW7L5PPXMQ5IDAWUQ5VJ5ELEEFIAXZ4UB
 VITE_STELLAR_NETWORK=testnet
 ```
 
@@ -64,12 +86,6 @@ export STELLAR_SOURCE=<your-identity>
 ```
 
 Writes `deployments/testnet.json`. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
-
-### Legacy contract (pre-escrow)
-
-`CBKLZBSTFM5YQ27LRDHDA4VTEY4CDCWVSHKOYWZN2X7AIKBKVRRPFGBQ` — [Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBKLZBSTFM5YQ27LRDHDA4VTEY4CDCWVSHKOYWZN2X7AIKBKVRRPFGBQ)
-
-New escrow-enabled deploy replaces this for live bidding.
 
 ## Development
 
@@ -112,4 +128,4 @@ SPA routes need fallback to `index.html` (`vercel.json`).
 - [x] CI/CD pipeline
 - [x] Contract + frontend tests
 - [x] Deployment scripts + documentation
-- [ ] Deploy new escrow contracts and update Vercel env (run `./scripts/deploy-testnet.sh`)
+- [x] Deploy escrow contracts and update Vercel env
