@@ -9,7 +9,9 @@ Stellar testnet live bidding dApp with **escrow-backed USDC bids**, Soroban inte
 
 ## Demo
 
-<video src="docs/demo-video.mp4" controls width="100%"></video>
+[![Licitor demo](https://img.youtube.com/vi/dkA6Zynuke4/hqdefault.jpg)](https://youtu.be/dkA6Zynuke4)
+
+**Watch:** [youtu.be/dkA6Zynuke4](https://youtu.be/dkA6Zynuke4)
 
 ## Screenshots
 
@@ -47,6 +49,16 @@ Deployed: **2026-06-24**
 | USDC (SAC) | [`CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA`](https://stellar.expert/explorer/testnet/contract/CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA) |
 
 Legacy pre-escrow auction: [`CBKLZBSTFM5YQ27LRDHDA4VTEY4CDCWVSHKOYWZN2X7AIKBKVRRPFGBQ`](https://stellar.expert/explorer/testnet/contract/CBKLZBSTFM5YQ27LRDHDA4VTEY4CDCWVSHKOYWZN2X7AIKBKVRRPFGBQ)
+
+### Sample transactions
+
+| Action | Transaction |
+|--------|-------------|
+| Deploy escrow | [`de3392ceb93f320674812c01048a18aab66867d7a81b1d59177d2a550cb2fcb8`](https://stellar.expert/explorer/testnet/tx/de3392ceb93f320674812c01048a18aab66867d7a81b1d59177d2a550cb2fcb8) |
+| Deploy auction | [`bc82f74cb75544da78680213651b96030e2f6ec7ebe4206e1e60beb9d7c5301c`](https://stellar.expert/explorer/testnet/tx/bc82f74cb75544da78680213651b96030e2f6ec7ebe4206e1e60beb9d7c5301c) |
+| Link escrow to auction | [`760968b498b3c1b5dd03ecd124dadededeecb10aaa75d7f8d4fbf69cf3892d2d`](https://stellar.expert/explorer/testnet/tx/760968b498b3c1b5dd03ecd124dadededeecb10aaa75d7f8d4fbf69cf3892d2d) |
+| Create auction | [`b4c0db04afbd0e1b65ff31b31190b3d5caacb1d8b34be21f972c9cf03c9aa410`](https://stellar.expert/explorer/testnet/tx/b4c0db04afbd0e1b65ff31b31190b3d5caacb1d8b34be21f972c9cf03c9aa410) |
+| Place bid (3 USDC, refunds previous) | [`c39936e0ce212a22eb2190cd88d4dcdaedba21a185412fdde92fb741eb9197b2`](https://stellar.expert/explorer/testnet/tx/c39936e0ce212a22eb2190cd88d4dcdaedba21a185412fdde92fb741eb9197b2) |
 
 ## Prerequisites
 
