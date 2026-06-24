@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Stellar CLI
+        run: cargo install stellar-cli --locked
+      - name: Format check
+        run: cargo fmt --all -- --check
+      - name: Contract tests
+        run: cargo test -p escrow -p auction
+      - name: Contract build
+        run: CARGO_TARGET_DIR=./target stellar contract build
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run build
+        env:
+          VITE_AUCTION_CONTRACT_ID: CBKLZBSTFM5YQ27LRDHDA4VTEY4CDCWVSHKOYWZN2X7AIKBKVRRPFGBQ
+          VITE_CONTRACT_ID: CBKLZBSTFM5YQ27LRDHDA4VTEY4CDCWVSHKOYWZN2X7AIKBKVRRPFGBQ
+          VITE_STELLAR_NETWORK: testnet

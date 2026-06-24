@@ -1,4 +1,6 @@
 export const STROOPS_PER_XLM = 10_000_000n;
+export const TOKEN_DECIMALS = 7;
+export const TOKEN_SYMBOL = "USDC";
 
 export function xlmToStroops(xlm: string): bigint {
   const trimmed = xlm.trim();
@@ -11,13 +13,21 @@ export function xlmToStroops(xlm: string): bigint {
 }
 
 export function stroopsToXlm(stroops: bigint): string {
+  return formatTokenAmount(stroops);
+}
+
+export function formatTokenAmount(stroops: bigint): string {
   const negative = stroops < 0n;
   const value = negative ? -stroops : stroops;
   const whole = value / STROOPS_PER_XLM;
   const fraction = value % STROOPS_PER_XLM;
-  const fractionStr = fraction.toString().padStart(7, "0").replace(/0+$/, "");
+  const fractionStr = fraction.toString().padStart(TOKEN_DECIMALS, "0").replace(/0+$/, "");
   const formatted = fractionStr ? `${whole}.${fractionStr}` : whole.toString();
   return negative ? `-${formatted}` : formatted;
+}
+
+export function formatTokenWithSymbol(stroops: bigint): string {
+  return `${formatTokenAmount(stroops)} ${TOKEN_SYMBOL}`;
 }
 
 export function suggestedNextBidXlm(highest: bigint): string {

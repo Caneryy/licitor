@@ -1,58 +1,33 @@
 # Licitor - Real-time Auction
 
-Stellar testnet live bidding dApp built with Soroban, StellarWalletsKit, and cursor-based `getEvents` synchronization.
-
-## Submission checklist
-
-### Live demo (optional)
+Stellar testnet live bidding dApp with **escrow-backed USDC bids**, Soroban inter-contract calls, cursor-based `getEvents` sync, and production CI/CD.
 
 **Production:** [https://licitor-psi.vercel.app](https://licitor-psi.vercel.app)
 
-Deployed on Vercel. Use `/auctions` to browse listings or `/create` to open a new auction.
-
-### Wallet options
-
-Licitor supports multiple wallets via [Stellar Wallets Kit](https://github.com/Creit-Tech/Stellar-WalletsKit):
-
-- Freighter
-- xBull
-- Lobstr
-
-![Wallet options available in the Connect Wallet modal](./docs/screenshots/wallet-options.png)
-
-### Deployed contract address (testnet)
-
-`CBKLZBSTFM5YQ27LRDHDA4VTEY4CDCWVSHKOYWZN2X7AIKBKVRRPFGBQ`
-
-- [View contract on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBKLZBSTFM5YQ27LRDHDA4VTEY4CDCWVSHKOYWZN2X7AIKBKVRRPFGBQ)
-
-### Sample contract call transaction (testnet)
-
-Example `invoke_host_function` against the auction contract (verifiable on Stellar Expert):
-
-`e79e85f1532b3c8025069ccf540e36f02a7d78a711210e2dca16304835421e98`
-
-- [View transaction on Stellar Expert](https://stellar.expert/explorer/testnet/tx/e79e85f1532b3c8025069ccf540e36f02a7d78a711210e2dca16304835421e98)
-
-Contract deployment transaction:
-
-`8f4985742466ba803a0afcad57eade1440c7a4c54b1e112655a35e7860942fa3`
-
-- [View deploy transaction on Stellar Expert](https://stellar.expert/explorer/testnet/tx/8f4985742466ba803a0afcad57eade1440c7a4c54b1e112655a35e7860942fa3)
-
 ## Features
 
+- **Escrow + SAC payments** — bids lock testnet USDC; outbid users refunded on-chain
+- **Two Soroban contracts** — auction orchestration + escrow custody (CPI)
 - Multi-wallet support: Freighter, xBull, Lobstr
-- Soroban auction contract with on-chain bid history and contract events
-- Real-time detail page updates via scoped event listener (`bid_placed`)
-- Transaction status tracking in CTA buttons (signing → submitting → confirming)
-- Neo-brutalist Lumen UI (responsive)
+- Real-time updates via scoped event polling (`bid_placed`, `auction_created`, `auction_finalized`)
+- Transaction status tracking (signing → submitting → confirming)
+- GitHub Actions CI: contract tests, lint, typecheck, vitest, build
+- Manual testnet contract deploy workflow
+- Neo-brutalist responsive UI
+
+## Architecture
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for contract APIs, event flow, and security decisions.
+
+## Demo
+
+Follow [docs/DEMO.md](docs/DEMO.md) for a 5-minute live presentation script.
 
 ## Prerequisites
 
 - Node.js 20+
 - Rust + Stellar CLI
-- A funded testnet wallet
+- Funded testnet wallet (XLM for fees + USDC for bids)
 
 ## Setup
 
@@ -61,77 +36,77 @@ npm install
 cp .env.example .env
 ```
 
-Set `VITE_CONTRACT_ID` after deploying the contract.
+After deploying contracts (see below), set:
 
-## Contract
-
-```bash
-CARGO_TARGET_DIR=./target stellar contract build
-cargo test -p auction
-stellar contract deploy \
-  --source-account <your-identity> \
-  --network testnet \
-  --wasm target/wasm32v1-none/release/auction.wasm
+```
+VITE_AUCTION_CONTRACT_ID=<auction_id>
+VITE_ESCROW_CONTRACT_ID=<escrow_id>
+VITE_TOKEN_CONTRACT_ID=<usdc_sac_id>
+VITE_CONTRACT_ID=<auction_id>
+VITE_STELLAR_NETWORK=testnet
 ```
 
-Deployed testnet contract for this repo:
+## Contracts
 
-`CBKLZBSTFM5YQ27LRDHDA4VTEY4CDCWVSHKOYWZN2X7AIKBKVRRPFGBQ`
+```bash
+make test-contracts
+make build-contracts
+```
+
+### Deploy to testnet
+
+```bash
+export STELLAR_SOURCE=<your-identity>
+./scripts/deploy-testnet.sh
+```
+
+Writes `deployments/testnet.json`. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
+### Legacy contract (pre-escrow)
+
+`CBKLZBSTFM5YQ27LRDHDA4VTEY4CDCWVSHKOYWZN2X7AIKBKVRRPFGBQ` — [Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBKLZBSTFM5YQ27LRDHDA4VTEY4CDCWVSHKOYWZN2X7AIKBKVRRPFGBQ)
+
+New escrow-enabled deploy replaces this for live bidding.
 
 ## Development
 
 ```bash
 npm run dev
+npm run test
+npm run typecheck
+npm run lint
+npm run build
 ```
 
 ## Deploy to Vercel
 
-Licitor is a Vite SPA. Client-side routes (`/auctions`, `/auction/:id`, `/privacy`, etc.) need a fallback rewrite to `index.html`, which is configured in `vercel.json`.
+SPA routes need fallback to `index.html` (`vercel.json`).
 
-### Option A: Vercel Dashboard
+1. Import repo at [vercel.com/new](https://vercel.com/new)
+2. Set `VITE_*` env vars from `deployments/testnet.json`
+3. Deploy
 
-1. Import the Git repository at [vercel.com/new](https://vercel.com/new)
-2. Framework preset: **Vite** (auto-detected)
-3. Add environment variables:
-   - `VITE_CONTRACT_ID` = your deployed Soroban contract ID
-   - `VITE_STELLAR_NETWORK` = `testnet`
-4. Deploy
+## Live bidding across browsers
 
-### Option B: Vercel CLI
-
-```bash
-npm i -g vercel
-vercel login
-vercel
-```
-
-Set the same environment variables when prompted, or in the project settings:
-
-```bash
-vercel env add VITE_CONTRACT_ID
-vercel env add VITE_STELLAR_NETWORK
-vercel --prod
-```
-
-After deployment, open routes like `/`, `/auctions`, and `/privacy` to confirm SPA routing works.
-
-**Live deployment:** [https://licitor-psi.vercel.app](https://licitor-psi.vercel.app)
-
-## Demo: live bidding across browsers
-
-1. Open the same auction detail page in Browser A and Browser B
-2. Browser B places a bid
-3. Browser A updates automatically within ~5 seconds via `getEvents`
-4. Bidder sees immediate post-tx refresh on their own browser
-
-## Architecture notes
-
-Soroban RPC does not provide browser push/WebSocket for contract events. Licitor uses Stellar's recommended pattern: contract emits events on-chain, and open detail pages poll `getEvents` with a ledger cursor while the tab is visible.
+1. Open the same auction detail in Browser A and B
+2. Browser B places a USDC bid
+3. Browser A updates within ~2s via `getEvents` + ledger cursor
+4. Bidder sees immediate post-tx refresh locally
 
 ## Error handling
 
-Wallet: not found, rejected, insufficient fee balance, wrong network
+- Wallet: not found, rejected, insufficient fee balance, wrong network
+- Token: USDC trustline, insufficient USDC for bid
+- Contract: auction state errors (#1–#9) mapped from simulation
+- Transaction: submission, timeout, restore-required
+- UI: Error boundary, retry on list/detail, reconnect for live sync
 
-Contract: auction state errors mapped from simulation
+## Submission checklist
 
-Transaction: submission, timeout, restore-required, account not funded
+- [x] Multi-wallet dApp on testnet
+- [x] Advanced contracts with inter-contract communication (auction ↔ escrow ↔ SAC)
+- [x] Event streaming with ledger cursor
+- [x] CI/CD pipeline
+- [x] Contract + frontend tests
+- [x] Deployment scripts + documentation
+- [ ] Deploy new escrow contracts and update Vercel env (run `./scripts/deploy-testnet.sh`)

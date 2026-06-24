@@ -1,9 +1,11 @@
 import { AuctionCard } from "../components/auction/AuctionCard";
 import { EmptyState } from "../components/feedback/EmptyState";
 import { ErrorBanner } from "../components/feedback/ErrorBanner";
+import { InfoBanner } from "../components/feedback/InfoBanner";
 import { LoadingSkeleton } from "../components/feedback/LoadingSkeleton";
 import { Button } from "../components/ui/Button";
 import { useAuctions } from "../hooks/useAuctions";
+import { useAuctionListEvents } from "../hooks/useAuctionListEvents";
 
 interface AuctionListViewProps {
   onOpen: (auctionId: number) => void;
@@ -11,14 +13,22 @@ interface AuctionListViewProps {
 }
 
 export function AuctionListView({ onOpen, onCreate }: AuctionListViewProps) {
-  const { auctions, loading, error } = useAuctions();
+  const { auctions, loading, error, refreshList } = useAuctions();
+  const { syncError, reconnect, live } = useAuctionListEvents(!loading && !error, refreshList);
 
   if (loading) {
     return <LoadingSkeleton variant="list" />;
   }
 
   if (error) {
-    return <ErrorBanner message={error} />;
+    return (
+      <div className="space-y-3">
+        <ErrorBanner message={error} />
+        <Button type="button" onClick={() => void refreshList()}>
+          Retry
+        </Button>
+      </div>
+    );
   }
 
   if (auctions.length === 0) {
@@ -42,12 +52,21 @@ export function AuctionListView({ onOpen, onCreate }: AuctionListViewProps) {
           <h2 className="text-2xl font-black">Open auctions</h2>
           <p className="mt-1 text-sm text-[var(--ink-muted)]">
             {auctions.length} auction{auctions.length === 1 ? "" : "s"} available
+            {live ? " · Live sync on" : " · Live sync paused"}
           </p>
         </div>
         <Button type="button" variant="ghost" onClick={onCreate}>
           + New auction
         </Button>
       </div>
+      {syncError && (
+        <div className="flex flex-wrap items-center gap-3">
+          <InfoBanner message={`Live updates paused: ${syncError}`} />
+          <Button type="button" variant="ghost" onClick={() => void reconnect()}>
+            Reconnect
+          </Button>
+        </div>
+      )}
       <div className="grid gap-4 md:grid-cols-2">
         {auctions.map((auction) => (
           <AuctionCard key={auction.id} auction={auction} onOpen={onOpen} />

@@ -1,0 +1,9 @@
+{
+  "network": "testnet",
+  "deployedAt": "placeholder-run-scripts-deploy-testnet-sh",
+  "tokenContractId": "CCW67TSZV3SSFYW5YT6L4GQIETBZNMXRJZKCZBU6O6MYPAAJMR7WAS6",
+  "escrowContractId": "",
+  "auctionContractId": "",
+  "legacyContractId": "CBKLZBSTFM5YQ27LRDHDA4VTEY4CDCWVSHKOYWZN2X7AIKBKVRRPFGBQ",
+  "note": "Run ./scripts/deploy-testnet.sh with STELLAR_SOURCE set to populate live IDs."
+}

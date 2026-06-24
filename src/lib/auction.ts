@@ -1,6 +1,6 @@
 import * as StellarSdk from "@stellar/stellar-sdk";
 import { simulateRead } from "./contract";
-import { getContractId } from "./stellar";
+import { getAuctionContractId } from "./stellar";
 import type { Auction, AuctionStatus, BidEntry } from "./types";
 
 const PUBLIC_ADDRESS = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
@@ -54,7 +54,7 @@ function scvToBidEntries(value: StellarSdk.xdr.ScVal | undefined): BidEntry[] {
 }
 
 export async function readAuctionCount(reader = PUBLIC_ADDRESS): Promise<number> {
-  const contractId = getContractId();
+  const contractId = getAuctionContractId();
   return simulateRead(
     reader,
     contractId,
@@ -65,7 +65,7 @@ export async function readAuctionCount(reader = PUBLIC_ADDRESS): Promise<number>
 }
 
 export async function readAuction(auctionId: number, reader = PUBLIC_ADDRESS): Promise<Auction> {
-  const contractId = getContractId();
+  const contractId = getAuctionContractId();
   const auction = await simulateRead(
     reader,
     contractId,
@@ -77,7 +77,7 @@ export async function readAuction(auctionId: number, reader = PUBLIC_ADDRESS): P
 }
 
 export async function readRecentBids(auctionId: number, reader = PUBLIC_ADDRESS): Promise<BidEntry[]> {
-  const contractId = getContractId();
+  const contractId = getAuctionContractId();
   return simulateRead(
     reader,
     contractId,

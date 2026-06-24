@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { invokeContract } from "../lib/contract";
-import { getContractId } from "../lib/stellar";
+import { getAuctionContractId } from "../lib/stellar";
 import type { ClassifiedError } from "../lib/errors";
 import { classifyError } from "../lib/errors";
 import type { TxPhase } from "../lib/types";
@@ -31,7 +31,7 @@ export function useSubmitAction() {
     try {
       const result = await invokeContract(
         sourceAddress,
-        getContractId(),
+        getAuctionContractId(),
         method,
         args,
         sign,

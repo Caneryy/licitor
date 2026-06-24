@@ -21,6 +21,8 @@ const CONTRACT_ERRORS: Record<number, ClassifiedError> = {
   5: { id: "auction_expired", category: "contract", message: "Auction has expired and no longer accepts bids." },
   6: { id: "invalid_starting_bid", category: "contract", message: "Starting bid must be greater than zero." },
   7: { id: "invalid_duration", category: "contract", message: "Auction duration must be greater than zero." },
+  8: { id: "unauthorized_finalizer", category: "contract", message: "Only the seller can finalize this auction." },
+  9: { id: "escrow_failed", category: "contract", message: "Escrow settlement failed. Check your USDC balance and try again." },
 };
 
 const TX_RESULT_ERRORS: Record<string, ClassifiedError> = {
@@ -81,7 +83,11 @@ function fromMessage(message: string): ClassifiedError | null {
     return { id: "user_rejected", category: "wallet", message: "Transaction cancelled in wallet." };
   }
   if (lower.includes("insufficient") && lower.includes("balance")) {
-    return { id: "insufficient_balance", category: "wallet", message: "Insufficient XLM for transaction fees." };
+    return {
+      id: "insufficient_balance",
+      category: "wallet",
+      message: "Insufficient USDC for this bid or XLM for transaction fees.",
+    };
   }
   if (lower.includes("wrong network") || lower.includes("network mismatch")) {
     return { id: "wrong_network", category: "wallet", message: "Wallet is connected to the wrong network. Switch to testnet." };
@@ -153,6 +159,11 @@ export const validationErrors = {
     id: "invalid_bid_amount",
     category: "validation" as const,
     message: "Enter a valid bid amount greater than zero.",
+  },
+  insufficientTokenBalance: {
+    id: "insufficient_token_balance",
+    category: "validation" as const,
+    message: "Insufficient USDC balance for this bid.",
   },
   invalidTitle: {
     id: "invalid_title",

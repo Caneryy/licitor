@@ -1,8 +1,11 @@
 import * as StellarSdk from "@stellar/stellar-sdk";
-import { rpc } from "./stellar";
+import {
+  computeEventStartLedger,
+  getStoredEventCursor,
+  setStoredEventCursor,
+} from "./eventCursor";
+import { EVENT_LEDGER_FALLBACK, rpc } from "./stellar";
 import type { ParsedBidEvent } from "./types";
-
-const POLL_LEDGER_LOOKBACK = 500;
 
 function encodeSymbolTopic(symbol: string): string {
   return StellarSdk.xdr.ScVal.scvSymbol(symbol).toXDR("base64");
@@ -18,7 +21,7 @@ function normalizeEventValue(value: unknown): unknown {
   return value;
 }
 
-function parseEventValue(value: unknown): {
+function parseBidEventValue(value: unknown): {
   auction_id: number;
   bidder: string;
   amount: bigint | number;
@@ -40,13 +43,25 @@ function parseEventValue(value: unknown): {
   };
 }
 
-export async function fetchBidEvents(
+function parseAuctionIdEvent(value: unknown): number | null {
+  const normalized = normalizeEventValue(value);
+  if (!normalized || typeof normalized !== "object") return null;
+  const record = normalized as Record<string, unknown>;
+  if (!("auction_id" in record)) return null;
+  return Number(record.auction_id);
+}
+
+async function fetchContractEvents(
   contractId: string,
-  auctionId: number,
-): Promise<ParsedBidEvent[]> {
+  topic: string,
+): Promise<StellarSdk.rpc.Api.GetEventsResponse["events"]> {
   const latest = await rpc.getLatestLedger();
   const endLedger = latest.sequence;
-  const startLedger = Math.max(1, endLedger - POLL_LEDGER_LOOKBACK);
+  const startLedger = computeEventStartLedger(
+    getStoredEventCursor(),
+    endLedger,
+    EVENT_LEDGER_FALLBACK,
+  );
 
   const response = await rpc.getEvents({
     startLedger,
@@ -55,18 +70,34 @@ export async function fetchBidEvents(
       {
         type: "contract",
         contractIds: [contractId],
-        topics: [[encodeSymbolTopic("bid_placed")]],
+        topics: [[encodeSymbolTopic(topic)]],
       },
     ],
   });
 
-  const events: ParsedBidEvent[] = [];
+  if (response.events.length > 0) {
+    const maxLedger = response.events.reduce(
+      (max, event) => Math.max(max, event.ledger),
+      startLedger,
+    );
+    setStoredEventCursor(maxLedger);
+  }
 
-  for (const event of response.events) {
-    const body = parseEventValue(event.value);
+  return response.events;
+}
+
+export async function fetchBidEvents(
+  contractId: string,
+  auctionId: number,
+): Promise<ParsedBidEvent[]> {
+  const events = await fetchContractEvents(contractId, "bid_placed");
+  const parsed: ParsedBidEvent[] = [];
+
+  for (const event of events) {
+    const body = parseBidEventValue(event.value);
     if (!body || body.auction_id !== auctionId) continue;
 
-    events.push({
+    parsed.push({
       id: `${event.txHash}:${body.bidder}:${body.amount.toString()}`,
       auctionId: body.auction_id,
       bidder: body.bidder,
@@ -76,5 +107,25 @@ export async function fetchBidEvents(
     });
   }
 
-  return events;
+  return parsed;
+}
+
+export async function fetchAuctionCreatedIds(contractId: string): Promise<number[]> {
+  const events = await fetchContractEvents(contractId, "auction_created");
+  const ids: number[] = [];
+  for (const event of events) {
+    const id = parseAuctionIdEvent(event.value);
+    if (id !== null) ids.push(id);
+  }
+  return ids;
+}
+
+export async function fetchAuctionFinalizedIds(contractId: string): Promise<number[]> {
+  const events = await fetchContractEvents(contractId, "auction_finalized");
+  const ids: number[] = [];
+  for (const event of events) {
+    const id = parseAuctionIdEvent(event.value);
+    if (id !== null) ids.push(id);
+  }
+  return ids;
 }

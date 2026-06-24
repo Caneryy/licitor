@@ -5,6 +5,7 @@ import { BidForm } from "../components/auction/BidForm";
 import { BidHistoryList } from "../components/auction/BidHistoryList";
 import { AnimatedHighestBid } from "../components/auction/AnimatedHighestBid";
 import { ErrorBanner } from "../components/feedback/ErrorBanner";
+import { InfoBanner } from "../components/feedback/InfoBanner";
 import { LoadingSkeleton } from "../components/feedback/LoadingSkeleton";
 import { TxStatusButton } from "../components/feedback/TxStatusButton";
 import { TxSuccessCard } from "../components/feedback/TxSuccessCard";
@@ -15,7 +16,7 @@ import { useSubmitAction } from "../hooks/useSubmitAction";
 import { useStellarWallet } from "../hooks/useStellarWallet";
 import { buildFinalizeArgs } from "../lib/auction";
 import { getAuctionPhase } from "../lib/auctionDisplay";
-import { formatDateTime, stroopsToXlm, truncateMiddle } from "../lib/format";
+import { formatTokenWithSymbol, formatDateTime, truncateMiddle } from "../lib/format";
 import { auctionUrl } from "../lib/routes";
 import type { PlacedBid } from "../lib/types";
 
@@ -30,7 +31,7 @@ export function AuctionDetailView({ auctionId, onBack }: AuctionDetailViewProps)
   const { address, sign } = useStellarWallet();
   const { auction, bids, loading, error, refreshDetail } = useAuctionDetail(auctionId, undefined, true);
   const listenerEnabled = auction ? getAuctionPhase(auction) === "live" : false;
-  const { events: liveEvents, live, pushBidEvent, refreshEvents } = useAuctionEvents(
+  const { events: liveEvents, live, syncError, pushBidEvent, refreshEvents, reconnect } = useAuctionEvents(
     auctionId,
     listenerEnabled,
   );
@@ -80,6 +81,9 @@ export function AuctionDetailView({ auctionId, onBack }: AuctionDetailViewProps)
           ← Back to auctions
         </Button>
         <ErrorBanner message={error ?? "Auction not found."} />
+        <Button type="button" onClick={() => void refreshDetail()}>
+          Retry
+        </Button>
       </div>
     );
   }
@@ -122,7 +126,7 @@ export function AuctionDetailView({ auctionId, onBack }: AuctionDetailViewProps)
           </div>
           <div>
             <dt className="text-[var(--ink-muted)]">Starting bid</dt>
-            <dd className="font-bold">{stroopsToXlm(auction.startingBid)} XLM</dd>
+            <dd className="font-bold">{formatTokenWithSymbol(auction.startingBid)}</dd>
           </div>
           <div>
             <dt className="text-[var(--ink-muted)]">Highest bid</dt>
@@ -152,6 +156,15 @@ export function AuctionDetailView({ auctionId, onBack }: AuctionDetailViewProps)
           </div>
         </dl>
       </section>
+
+      {syncError && (
+        <InfoBanner message={`Live updates paused: ${syncError}`} />
+      )}
+      {syncError && (
+        <Button type="button" variant="ghost" onClick={() => void reconnect()}>
+          Reconnect live updates
+        </Button>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <BidForm auction={auction} onBidPlaced={handleBidPlaced} />

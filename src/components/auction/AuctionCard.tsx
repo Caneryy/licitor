@@ -1,5 +1,6 @@
 import type { Auction } from "../../lib/types";
-import { stroopsToXlm } from "../../lib/format";
+import { formatTokenWithSymbol } from "../../lib/format";
+import { Badge } from "../ui/Badge";
 import { AuctionStatusBadge, AuctionTimingLine } from "./AuctionStatus";
 
 interface AuctionCardProps {
@@ -16,11 +17,14 @@ export function AuctionCard({ auction, onOpen }: AuctionCardProps) {
     >
       <div className="mb-3 flex items-start justify-between gap-3">
         <h3 className="text-xl font-black">{auction.title}</h3>
-        <AuctionStatusBadge auction={auction} />
+        <div className="flex flex-col items-end gap-1">
+          <AuctionStatusBadge auction={auction} />
+          <Badge>Escrow</Badge>
+        </div>
       </div>
       <div className="space-y-1 text-sm">
         <p>
-          Highest bid: <strong>{stroopsToXlm(auction.highestBid)} XLM</strong>
+          Highest bid: <strong>{formatTokenWithSymbol(auction.highestBid)}</strong>
         </p>
         <AuctionTimingLine auction={auction} />
       </div>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchBidEvents } from "../lib/events";
-import { EVENT_FETCH_INTERVAL_MS, getContractId } from "../lib/stellar";
+import { EVENT_FETCH_INTERVAL_MS, getAuctionContractId } from "../lib/stellar";
 import type { ParsedBidEvent, PlacedBid } from "../lib/types";
 
 function sortEvents(events: ParsedBidEvent[]): ParsedBidEvent[] {
@@ -22,6 +22,7 @@ function toParsedBidEvent(bid: PlacedBid): ParsedBidEvent {
 
 export function useAuctionEvents(auctionId: number | null, enabled: boolean) {
   const [events, setEvents] = useState<ParsedBidEvent[]>([]);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const [visible, setVisible] = useState(
     typeof document === "undefined" ? true : !document.hidden,
   );
@@ -36,7 +37,8 @@ export function useAuctionEvents(auctionId: number | null, enabled: boolean) {
     const currentAuctionId = auctionIdRef.current;
     if (!currentAuctionId) return;
 
-    const incoming = await fetchBidEvents(getContractId(), currentAuctionId);
+    const incoming = await fetchBidEvents(getAuctionContractId(), currentAuctionId);
+    setSyncError(null);
     const fresh = incoming.filter((event) => !seenRef.current.has(event.id));
 
     if (replace) {
@@ -68,6 +70,15 @@ export function useAuctionEvents(auctionId: number | null, enabled: boolean) {
     }, 2000);
   }, [syncFromRpc]);
 
+  const reconnect = useCallback(async () => {
+    setSyncError(null);
+    try {
+      await syncFromRpc(true);
+    } catch (err) {
+      setSyncError(err instanceof Error ? err.message : "Live updates paused.");
+    }
+  }, [syncFromRpc]);
+
   useEffect(() => {
     const onVisibility = () => {
       const isVisible = !document.hidden;
@@ -89,8 +100,9 @@ export function useAuctionEvents(auctionId: number | null, enabled: boolean) {
     const poll = async () => {
       try {
         await syncFromRpc(false);
-      } catch {
-        // Ignore transient RPC errors during background sync.
+        setSyncError(null);
+      } catch (err) {
+        setSyncError(err instanceof Error ? err.message : "Live updates paused.");
       }
     };
 
@@ -105,9 +117,13 @@ export function useAuctionEvents(auctionId: number | null, enabled: boolean) {
       }
     };
 
-    void syncFromRpc(true).finally(() => {
-      if (!cancelled) void tick();
-    });
+    void syncFromRpc(true)
+      .catch((err) => {
+        setSyncError(err instanceof Error ? err.message : "Live updates paused.");
+      })
+      .finally(() => {
+        if (!cancelled) void tick();
+      });
 
     return () => {
       cancelled = true;
@@ -119,7 +135,8 @@ export function useAuctionEvents(auctionId: number | null, enabled: boolean) {
   useEffect(() => {
     seenRef.current = new Set();
     setEvents([]);
+    setSyncError(null);
   }, [auctionId]);
 
-  return { events, live: active, pushBidEvent, refreshEvents };
+  return { events, live: active, syncError, pushBidEvent, refreshEvents, reconnect };
 }

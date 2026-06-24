@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { stroopsToXlm } from "../../lib/format";
+import { formatTokenWithSymbol } from "../../lib/format";
 
 interface AnimatedHighestBidProps {
   amount: bigint;
@@ -29,7 +29,7 @@ export function AnimatedHighestBid({ amount }: AnimatedHighestBidProps) {
 
   return (
     <span ref={elementRef} className="inline-block font-black">
-      {stroopsToXlm(amount)} XLM
+      {formatTokenWithSymbol(amount)}
     </span>
   );
 }

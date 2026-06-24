@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Input } from "../ui/Input";
+import { Badge } from "../ui/Badge";
 import { ErrorBanner } from "../feedback/ErrorBanner";
 import { InfoBanner } from "../feedback/InfoBanner";
 import { TxStatusButton } from "../feedback/TxStatusButton";
@@ -10,7 +11,8 @@ import { useBalance } from "../../hooks/useBalance";
 import { buildPlaceBidArgs } from "../../lib/auction";
 import { validationErrors } from "../../lib/errors";
 import { isBiddingOpen } from "../../lib/auctionDisplay";
-import { suggestedNextBidXlm, xlmToStroops } from "../../lib/format";
+import { suggestedNextBidXlm, TOKEN_SYMBOL, xlmToStroops } from "../../lib/format";
+import { buildChangeTrustXdr } from "../../lib/token";
 import { AnimatedHighestBid } from "./AnimatedHighestBid";
 import { useAuctionNow } from "./AuctionStatus";
 import type { Auction, PlacedBid } from "../../lib/types";
@@ -22,13 +24,15 @@ interface BidFormProps {
 
 export function BidForm({ auction, onBidPlaced }: BidFormProps) {
   const { address, connected, sign } = useStellarWallet();
-  const { hasFeeBalance } = useBalance(address);
+  const { hasFeeBalance, tokenBalanceLabel, hasTokenBalance, hasTrustline, refresh } =
+    useBalance(address);
   const { phase, error, txHash, run, reset } = useSubmitAction();
   const now = useAuctionNow();
   const biddingOpen = isBiddingOpen(auction, now);
 
   const [amount, setAmount] = useState(() => suggestedNextBidXlm(auction.highestBid));
   const [localError, setLocalError] = useState<string | null>(null);
+  const [trustlineBusy, setTrustlineBusy] = useState(false);
 
   const handleReset = () => {
     reset();
@@ -44,6 +48,21 @@ export function BidForm({ auction, onBidPlaced }: BidFormProps) {
       setAmount(suggestedNextBidXlm(auction.highestBid));
     }
   }, [auction.highestBid]);
+
+  const handleAddTrustline = async () => {
+    if (!address) return;
+    setTrustlineBusy(true);
+    setLocalError(null);
+    try {
+      const xdr = await buildChangeTrustXdr(address);
+      await sign(xdr, address);
+      await refresh();
+    } catch (err) {
+      setLocalError(err instanceof Error ? err.message : "Failed to add USDC trustline.");
+    } finally {
+      setTrustlineBusy(false);
+    }
+  };
 
   const handleSubmit = async () => {
     setLocalError(null);
@@ -72,6 +91,11 @@ export function BidForm({ auction, onBidPlaced }: BidFormProps) {
       return;
     }
 
+    if (!hasTokenBalance(stroops)) {
+      setLocalError(validationErrors.insufficientTokenBalance.message);
+      return;
+    }
+
     try {
       const result = await run({
         sourceAddress: address,
@@ -85,6 +109,7 @@ export function BidForm({ auction, onBidPlaced }: BidFormProps) {
         amount: stroops,
         txHash: result.hash,
       });
+      void refresh();
     } catch {
       // Error handled by hook.
     }
@@ -104,12 +129,31 @@ export function BidForm({ auction, onBidPlaced }: BidFormProps) {
         void handleSubmit();
       }}
     >
-      <h2 className="text-2xl font-black">Place Bid</h2>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-2xl font-black">Place Bid</h2>
+        <Badge>Escrow secured</Badge>
+      </div>
       <p className="text-sm">
         Current highest: <AnimatedHighestBid amount={auction.highestBid} />
       </p>
+      {tokenBalanceLabel && (
+        <p className="text-xs text-[var(--ink-muted)]">Your balance: {tokenBalanceLabel}</p>
+      )}
 
       {!connected && <InfoBanner message="Connect your wallet to place a bid." />}
+      {connected && hasTrustline === false && (
+        <div className="space-y-2">
+          <InfoBanner message="Add a testnet USDC trustline to bid with escrow-protected payments." />
+          <button
+            type="button"
+            className="text-sm font-bold underline"
+            disabled={trustlineBusy}
+            onClick={() => void handleAddTrustline()}
+          >
+            {trustlineBusy ? "Opening wallet…" : "Add USDC trustline"}
+          </button>
+        </div>
+      )}
       {connected && !biddingOpen && (
         <InfoBanner
           message={
@@ -122,7 +166,7 @@ export function BidForm({ auction, onBidPlaced }: BidFormProps) {
       <ErrorBanner message={localError ?? error?.message ?? ""} onDismiss={() => setLocalError(null)} />
 
       <label className="block space-y-2 text-sm font-bold">
-        Your bid (XLM)
+        Your bid ({TOKEN_SYMBOL})
         <Input
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
@@ -132,7 +176,7 @@ export function BidForm({ auction, onBidPlaced }: BidFormProps) {
           step="any"
         />
         <span className="block text-xs font-normal text-[var(--ink-muted)]">
-          Minimum: {suggestedNextBidXlm(auction.highestBid)} XLM
+          Minimum: {suggestedNextBidXlm(auction.highestBid)} {TOKEN_SYMBOL}
         </span>
       </label>
 

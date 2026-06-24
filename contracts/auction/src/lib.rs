@@ -1,6 +1,7 @@
 #![no_std]
 use soroban_sdk::{
-    contract, contracterror, contractevent, contractimpl, contracttype, Address, Env, String, Vec,
+    contract, contractclient, contracterror, contractevent, contractimpl, contracttype, Address, Env,
+    String, Vec,
 };
 
 const MIN_TTL: u32 = 17_280;
@@ -11,6 +12,7 @@ const MAX_BID_HISTORY: u32 = 10;
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DataKey {
     AuctionCount,
+    Escrow,
     Auction(u32),
     BidHistory(u32),
 }
@@ -51,6 +53,13 @@ pub struct BidPlacedEvent {
     pub ledger: u32,
 }
 
+#[contractevent(topics = ["bid_refunded"])]
+pub struct BidRefundedEvent {
+    pub auction_id: u32,
+    pub bidder: Address,
+    pub amount: i128,
+}
+
 #[contractevent(topics = ["auction_created"])]
 pub struct AuctionCreatedEvent {
     pub auction_id: u32,
@@ -74,6 +83,28 @@ pub enum ContractError {
     AuctionExpired = 5,
     InvalidStartingBid = 6,
     InvalidDuration = 7,
+    UnauthorizedFinalizer = 8,
+    EscrowFailed = 9,
+}
+
+#[contractclient(name = "EscrowClient")]
+pub trait EscrowContract {
+    fn lock_bid(
+        env: Env,
+        auction_id: u32,
+        bidder: Address,
+        amount: i128,
+        previous_bidder: Option<Address>,
+        previous_amount: i128,
+    );
+
+    fn settle(
+        env: Env,
+        auction_id: u32,
+        seller: Address,
+        winner: Option<Address>,
+        amount: i128,
+    );
 }
 
 #[contract]
@@ -81,7 +112,10 @@ pub struct Contract;
 
 #[contractimpl]
 impl Contract {
-    pub fn __constructor(env: Env) {
+    pub fn __constructor(env: Env, escrow_address: Address) {
+        env.storage()
+            .instance()
+            .set(&DataKey::Escrow, &escrow_address);
         env.storage().instance().set(&DataKey::AuctionCount, &0u32);
         env.storage()
             .instance()
@@ -180,6 +214,38 @@ impl Contract {
             return Err(ContractError::BidTooLow);
         }
 
+        let previous_bidder = auction.highest_bidder.clone();
+        let previous_amount = if auction.highest_bidder.is_some() {
+            auction.highest_bid
+        } else {
+            0
+        };
+
+        let escrow_address: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Escrow)
+            .ok_or(ContractError::EscrowFailed)?;
+        let escrow = EscrowClient::new(&env, &escrow_address);
+        escrow.lock_bid(
+            &auction_id,
+            &bidder,
+            &amount,
+            &previous_bidder,
+            &previous_amount,
+        );
+
+        if let Some(ref prev) = previous_bidder {
+            if previous_amount > 0 {
+                BidRefundedEvent {
+                    auction_id,
+                    bidder: prev.clone(),
+                    amount: previous_amount,
+                }
+                .publish(&env);
+            }
+        }
+
         let ledger = env.ledger().sequence();
         let entry = BidEntry {
             bidder: bidder.clone(),
@@ -243,6 +309,10 @@ impl Contract {
             .get(&auction_key)
             .ok_or(ContractError::AuctionNotFound)?;
 
+        if caller != auction.seller {
+            return Err(ContractError::UnauthorizedFinalizer);
+        }
+
         if auction.status == AuctionStatus::Ended {
             return Err(ContractError::AuctionEnded);
         }
@@ -252,8 +322,27 @@ impl Contract {
             return Err(ContractError::AuctionStillActive);
         }
 
-        auction.status = AuctionStatus::Ended;
         let winner = auction.highest_bidder.clone();
+        let settle_amount = if winner.is_some() {
+            auction.highest_bid
+        } else {
+            0
+        };
+
+        let escrow_address: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Escrow)
+            .ok_or(ContractError::EscrowFailed)?;
+        let escrow = EscrowClient::new(&env, &escrow_address);
+        escrow.settle(
+            &auction_id,
+            &auction.seller,
+            &winner,
+            &settle_amount,
+        );
+
+        auction.status = AuctionStatus::Ended;
 
         env.storage().persistent().set(&auction_key, &auction);
         env.storage()
@@ -295,6 +384,13 @@ impl Contract {
             .persistent()
             .get(&DataKey::BidHistory(auction_id))
             .unwrap_or_else(|| Vec::new(&env)))
+    }
+
+    pub fn get_escrow(env: Env) -> Address {
+        env.storage()
+            .instance()
+            .get(&DataKey::Escrow)
+            .expect("escrow not configured")
     }
 }
 

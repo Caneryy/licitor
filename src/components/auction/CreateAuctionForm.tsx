@@ -12,7 +12,7 @@ import {
   parseCreateAuctionResult,
 } from "../../lib/auction";
 import { validationErrors } from "../../lib/errors";
-import { xlmToStroops } from "../../lib/format";
+import { TOKEN_SYMBOL, xlmToStroops } from "../../lib/format";
 
 interface CreateAuctionFormProps {
   onCreated: (auctionId: number) => void;
@@ -91,7 +91,7 @@ export function CreateAuctionForm({ onCreated }: CreateAuctionFormProps) {
       </label>
 
       <label className="block space-y-2 text-sm font-bold">
-        Starting bid (XLM)
+        Starting bid ({TOKEN_SYMBOL})
         <Input
           value={startingBid}
           onChange={(e) => setStartingBid(e.target.value)}

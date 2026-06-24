@@ -1,6 +1,6 @@
 import type { BidEntry } from "../../lib/types";
 import { bidKey } from "../../lib/bids";
-import { formatDateTime, stroopsToXlm, truncateMiddle } from "../../lib/format";
+import { formatDateTime, formatTokenWithSymbol, truncateMiddle } from "../../lib/format";
 import { getExplorerTxUrl } from "../../lib/explorer";
 import { useNewBidKeys } from "../../hooks/useNewBidKeys";
 import { Badge } from "../ui/Badge";
@@ -24,7 +24,7 @@ export function BidHistoryList({ auctionId, bids, live = false }: BidHistoryList
       {latestBid && (
         <div className="bid-toast mb-4" role="status" aria-live="polite">
           <span className="bid-toast-label">New bid</span>
-          <strong>{stroopsToXlm(latestBid.amount)} XLM</strong>
+          <strong>{formatTokenWithSymbol(latestBid.amount)}</strong>
           <span className="text-xs">from {truncateMiddle(latestBid.bidder, 8, 6)}</span>
         </div>
       )}
@@ -56,7 +56,7 @@ export function BidHistoryList({ auctionId, bids, live = false }: BidHistoryList
                     {isNew && <span className="bid-new-badge">NEW</span>}
                   </div>
                   <span className={isNew ? "bid-amount-pop font-black" : "font-bold"}>
-                    {stroopsToXlm(bid.amount)} XLM
+                    {formatTokenWithSymbol(bid.amount)}
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-[var(--ink-muted)]">{formatDateTime(bid.timestamp)}</p>
