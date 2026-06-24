@@ -2,6 +2,16 @@ export const STROOPS_PER_XLM = 10_000_000n;
 export const TOKEN_DECIMALS = 7;
 export const TOKEN_SYMBOL = "USDC";
 
+export function decimalStringToStroops(value: string): bigint {
+  const trimmed = value.trim();
+  if (!trimmed || Number.isNaN(Number(trimmed))) {
+    return 0n;
+  }
+  const [whole, fraction = ""] = trimmed.split(".");
+  const padded = (fraction + "0000000").slice(0, TOKEN_DECIMALS);
+  return BigInt(whole) * STROOPS_PER_XLM + BigInt(padded);
+}
+
 export function xlmToStroops(xlm: string): bigint {
   const trimmed = xlm.trim();
   if (!trimmed || Number.isNaN(Number(trimmed))) {

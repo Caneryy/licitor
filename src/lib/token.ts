@@ -1,4 +1,5 @@
 import * as StellarSdk from "@stellar/stellar-sdk";
+import { decimalStringToStroops } from "./format";
 import { classifyError } from "./errors";
 import { simulateRead } from "./contract";
 import { config, getTokenContractId, horizon } from "./stellar";
@@ -13,7 +14,7 @@ function isTrustlineAlreadyExists(error: unknown): boolean {
   return codes.includes("op_already_exists");
 }
 
-export async function getTokenBalance(address: string): Promise<bigint> {
+export async function getSacTokenBalance(address: string): Promise<bigint> {
   const tokenId = getTokenContractId();
   return simulateRead(
     address,
@@ -25,6 +26,40 @@ export async function getTokenBalance(address: string): Promise<bigint> {
       return BigInt(StellarSdk.scValToNative(value) as string | number | bigint);
     },
   );
+}
+
+/** @deprecated Use getSacTokenBalance */
+export async function getTokenBalance(address: string): Promise<bigint> {
+  return getSacTokenBalance(address);
+}
+
+export async function getClassicUsdcBalance(address: string): Promise<bigint> {
+  const account = await horizon.loadAccount(address);
+  const asset = new StellarSdk.Asset(config.usdcAssetCode, config.usdcIssuer);
+  const line = account.balances.find((balance) => {
+    if (balance.asset_type === "native" || balance.asset_type === "liquidity_pool_shares") {
+      return false;
+    }
+    return balance.asset_code === asset.getCode() && balance.asset_issuer === asset.getIssuer();
+  });
+
+  if (!line || !("balance" in line)) {
+    return 0n;
+  }
+
+  return decimalStringToStroops(line.balance);
+}
+
+/**
+ * USDC balance for bidding: max of Horizon trustline (faucet) and SAC contract read.
+ * Circle faucet credits classic trustline balance; escrow reads via SAC.
+ */
+export async function getUsdcBalance(address: string): Promise<bigint> {
+  const [classic, sac] = await Promise.all([
+    getClassicUsdcBalance(address).catch(() => 0n),
+    getSacTokenBalance(address).catch(() => 0n),
+  ]);
+  return classic > sac ? classic : sac;
 }
 
 export async function hasUsdcTrustline(address: string): Promise<boolean> {
@@ -90,7 +125,7 @@ export function getTestnetUsdcFaucetUrl(): string {
 export async function readTokenBalanceForDisplay(address: string | null): Promise<bigint | null> {
   if (!address) return null;
   try {
-    return await getTokenBalance(address);
+    return await getUsdcBalance(address);
   } catch {
     return null;
   }

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getNativeBalance } from "../lib/balance";
 import { formatTokenWithSymbol } from "../lib/format";
 import { MIN_FEE_XLM } from "../lib/stellar";
-import { getTokenBalance, hasUsdcTrustline } from "../lib/token";
+import { getUsdcBalance, hasUsdcTrustline } from "../lib/token";
 
 export function useBalance(address: string | null) {
   const [balance, setBalance] = useState<number | null>(null);
@@ -21,7 +21,7 @@ export function useBalance(address: string | null) {
     try {
       const [xlm, usdc, trustline] = await Promise.all([
         getNativeBalance(address),
-        getTokenBalance(address).catch(() => null),
+        getUsdcBalance(address).catch(() => null),
         hasUsdcTrustline(address).catch(() => false),
       ]);
       setBalance(xlm);
@@ -39,6 +39,24 @@ export function useBalance(address: string | null) {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    if (!address) return undefined;
+
+    const refreshOnReturn = () => {
+      void refresh();
+    };
+    const onVisibility = () => {
+      if (!document.hidden) refreshOnReturn();
+    };
+
+    window.addEventListener("focus", refreshOnReturn);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("focus", refreshOnReturn);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [address, refresh]);
 
   const hasTokenBalance = useCallback(
     (required: bigint) => tokenBalance !== null && tokenBalance >= required,

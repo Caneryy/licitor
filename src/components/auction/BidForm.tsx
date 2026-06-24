@@ -12,7 +12,7 @@ import { buildPlaceBidArgs } from "../../lib/auction";
 import { validationErrors } from "../../lib/errors";
 import { isBiddingOpen } from "../../lib/auctionDisplay";
 import { suggestedNextBidXlm, TOKEN_SYMBOL, xlmToStroops } from "../../lib/format";
-import { getTestnetUsdcFaucetUrl, submitChangeTrust } from "../../lib/token";
+import { getTestnetUsdcFaucetUrl, getUsdcBalance, submitChangeTrust } from "../../lib/token";
 import { getExplorerTxUrl } from "../../lib/explorer";
 import { classifyError } from "../../lib/errors";
 import { AnimatedHighestBid } from "./AnimatedHighestBid";
@@ -26,7 +26,7 @@ interface BidFormProps {
 
 export function BidForm({ auction, onBidPlaced }: BidFormProps) {
   const { address, connected, sign } = useStellarWallet();
-  const { hasFeeBalance, tokenBalanceLabel, hasTokenBalance, hasTrustline, tokenBalance, refresh } =
+  const { hasFeeBalance, tokenBalanceLabel, hasTrustline, tokenBalance, refresh } =
     useBalance(address);
   const { phase, error, txHash, run, reset } = useSubmitAction();
   const now = useAuctionNow();
@@ -107,7 +107,8 @@ export function BidForm({ auction, onBidPlaced }: BidFormProps) {
       return;
     }
 
-    if (!hasTokenBalance(stroops)) {
+    const latestUsdc = await getUsdcBalance(address);
+    if (latestUsdc < stroops) {
       if (needsTrustline) {
         setLocalError("Add a USDC trustline before placing a bid.");
         return;
@@ -115,6 +116,7 @@ export function BidForm({ auction, onBidPlaced }: BidFormProps) {
       setLocalError(validationErrors.insufficientTokenBalance.message);
       return;
     }
+    void refresh();
 
     try {
       const result = await run({

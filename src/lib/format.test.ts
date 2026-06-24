@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  decimalStringToStroops,
   formatTokenAmount,
   formatTokenWithSymbol,
   suggestedNextBidXlm,
@@ -16,6 +17,11 @@ describe("format", () => {
 
   it("suggests next whole token bid", () => {
     expect(suggestedNextBidXlm(20_000_000n)).toBe("3");
+  });
+
+  it("parses horizon decimal balances", () => {
+    expect(decimalStringToStroops("20.0000000")).toBe(200_000_000n);
+    expect(decimalStringToStroops("3")).toBe(30_000_000n);
   });
 
   it("truncates long addresses", () => {
