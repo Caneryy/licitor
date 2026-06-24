@@ -1,6 +1,17 @@
 import * as StellarSdk from "@stellar/stellar-sdk";
+import { classifyError } from "./errors";
 import { simulateRead } from "./contract";
 import { config, getTokenContractId, horizon } from "./stellar";
+
+const TRUSTLINE_LIMIT = "1000000";
+
+function isTrustlineAlreadyExists(error: unknown): boolean {
+  const response = error as {
+    response?: { data?: { extras?: { result_codes?: { operations?: string[] } } } };
+  };
+  const codes = response.response?.data?.extras?.result_codes?.operations ?? [];
+  return codes.includes("op_already_exists");
+}
 
 export async function getTokenBalance(address: string): Promise<bigint> {
   const tokenId = getTokenContractId();
@@ -35,18 +46,45 @@ export async function buildChangeTrustXdr(sourceAddress: string): Promise<string
   const account = await horizon.loadAccount(sourceAddress);
   const asset = new StellarSdk.Asset(config.usdcAssetCode, config.usdcIssuer);
   const transaction = new StellarSdk.TransactionBuilder(account, {
-    fee: StellarSdk.BASE_FEE,
+    fee: (Number(StellarSdk.BASE_FEE) * 100).toString(),
     networkPassphrase: config.networkPassphrase,
   })
     .addOperation(
       StellarSdk.Operation.changeTrust({
         asset,
-        limit: "1000000",
+        limit: TRUSTLINE_LIMIT,
       }),
     )
     .setTimeout(180)
     .build();
   return transaction.toXDR();
+}
+
+export async function submitChangeTrust(
+  sourceAddress: string,
+  sign: (xdr: string, sourceAddress: string) => Promise<string>,
+): Promise<string> {
+  const unsignedXdr = await buildChangeTrustXdr(sourceAddress);
+  const signedXdr = await sign(unsignedXdr, sourceAddress);
+
+  const transaction = StellarSdk.TransactionBuilder.fromXDR(
+    signedXdr,
+    config.networkPassphrase,
+  ) as StellarSdk.Transaction;
+
+  try {
+    const response = await horizon.submitTransaction(transaction);
+    return response.hash;
+  } catch (error) {
+    if (isTrustlineAlreadyExists(error)) {
+      return "trustline_exists";
+    }
+    throw classifyError(error);
+  }
+}
+
+export function getTestnetUsdcFaucetUrl(): string {
+  return "https://faucet.circle.com/";
 }
 
 export async function readTokenBalanceForDisplay(address: string | null): Promise<bigint | null> {

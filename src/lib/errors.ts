@@ -118,8 +118,52 @@ function fromMessage(message: string): ClassifiedError | null {
   if (lower.includes("timeout")) {
     return { id: "tx_timeout", category: "transaction", message: "Transaction confirmation timed out." };
   }
-  if (lower.includes("missing vite_contract_id")) {
+  if (lower.includes("missing vite_contract_id") || lower.includes("missing vite_auction_contract_id")) {
     return { id: "missing_contract_id", category: "transaction", message: "Contract ID is not configured." };
+  }
+  return null;
+}
+
+function parseHorizonError(error: unknown): ClassifiedError | null {
+  const response = error as {
+    response?: {
+      data?: {
+        detail?: string;
+        extras?: { result_codes?: { transaction?: string; operations?: string[] } };
+      };
+    };
+  };
+  const detail = response.response?.data?.detail;
+  const txCode = response.response?.data?.extras?.result_codes?.transaction;
+  const opCodes = response.response?.data?.extras?.result_codes?.operations ?? [];
+
+  if (opCodes.includes("op_no_trust")) {
+    return {
+      id: "no_trustline",
+      category: "wallet",
+      message: "Add a USDC trustline before receiving or sending this asset.",
+    };
+  }
+  if (opCodes.includes("op_underfunded")) {
+    return {
+      id: "underfunded",
+      category: "wallet",
+      message: "Insufficient XLM to cover the trustline reserve and fees.",
+    };
+  }
+  if (detail) {
+    return {
+      id: "horizon_error",
+      category: "transaction",
+      message: detail,
+    };
+  }
+  if (txCode) {
+    return {
+      id: "horizon_tx_failed",
+      category: "transaction",
+      message: `Transaction failed on network (${txCode}).`,
+    };
   }
   return null;
 }
@@ -141,6 +185,7 @@ export function classifyError(error: unknown): ClassifiedError {
 
   const message = error instanceof Error ? error.message : String(error);
   return (
+    parseHorizonError(error) ??
     parseContractCode(message) ??
     fromMessage(message) ?? {
       id: "unknown_error",

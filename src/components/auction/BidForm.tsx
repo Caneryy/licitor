@@ -12,7 +12,9 @@ import { buildPlaceBidArgs } from "../../lib/auction";
 import { validationErrors } from "../../lib/errors";
 import { isBiddingOpen } from "../../lib/auctionDisplay";
 import { suggestedNextBidXlm, TOKEN_SYMBOL, xlmToStroops } from "../../lib/format";
-import { buildChangeTrustXdr } from "../../lib/token";
+import { getTestnetUsdcFaucetUrl, submitChangeTrust } from "../../lib/token";
+import { getExplorerTxUrl } from "../../lib/explorer";
+import { classifyError } from "../../lib/errors";
 import { AnimatedHighestBid } from "./AnimatedHighestBid";
 import { useAuctionNow } from "./AuctionStatus";
 import type { Auction, PlacedBid } from "../../lib/types";
@@ -24,7 +26,7 @@ interface BidFormProps {
 
 export function BidForm({ auction, onBidPlaced }: BidFormProps) {
   const { address, connected, sign } = useStellarWallet();
-  const { hasFeeBalance, tokenBalanceLabel, hasTokenBalance, hasTrustline, refresh } =
+  const { hasFeeBalance, tokenBalanceLabel, hasTokenBalance, hasTrustline, tokenBalance, refresh } =
     useBalance(address);
   const { phase, error, txHash, run, reset } = useSubmitAction();
   const now = useAuctionNow();
@@ -33,6 +35,12 @@ export function BidForm({ auction, onBidPlaced }: BidFormProps) {
   const [amount, setAmount] = useState(() => suggestedNextBidXlm(auction.highestBid));
   const [localError, setLocalError] = useState<string | null>(null);
   const [trustlineBusy, setTrustlineBusy] = useState(false);
+  const [trustlineTxHash, setTrustlineTxHash] = useState<string | null>(null);
+
+  const needsTrustline =
+    connected && hasTrustline === false && (tokenBalance === null || tokenBalance === 0n);
+  const needsUsdcFunds =
+    connected && hasTrustline === true && tokenBalance !== null && tokenBalance === 0n;
 
   const handleReset = () => {
     reset();
@@ -53,12 +61,20 @@ export function BidForm({ auction, onBidPlaced }: BidFormProps) {
     if (!address) return;
     setTrustlineBusy(true);
     setLocalError(null);
+    setTrustlineTxHash(null);
     try {
-      const xdr = await buildChangeTrustXdr(address);
-      await sign(xdr, address);
+      const hash = await submitChangeTrust(address, sign);
+      if (hash === "trustline_exists") {
+        setTrustlineTxHash(null);
+      } else {
+        setTrustlineTxHash(hash);
+      }
       await refresh();
+      window.setTimeout(() => {
+        void refresh();
+      }, 3000);
     } catch (err) {
-      setLocalError(err instanceof Error ? err.message : "Failed to add USDC trustline.");
+      setLocalError(classifyError(err).message);
     } finally {
       setTrustlineBusy(false);
     }
@@ -92,6 +108,10 @@ export function BidForm({ auction, onBidPlaced }: BidFormProps) {
     }
 
     if (!hasTokenBalance(stroops)) {
+      if (needsTrustline) {
+        setLocalError("Add a USDC trustline before placing a bid.");
+        return;
+      }
       setLocalError(validationErrors.insufficientTokenBalance.message);
       return;
     }
@@ -141,17 +161,43 @@ export function BidForm({ auction, onBidPlaced }: BidFormProps) {
       )}
 
       {!connected && <InfoBanner message="Connect your wallet to place a bid." />}
-      {connected && hasTrustline === false && (
+      {needsTrustline && (
         <div className="space-y-2">
-          <InfoBanner message="Add a testnet USDC trustline to bid with escrow-protected payments." />
+          <InfoBanner message="Add a testnet USDC trustline to receive USDC for escrow-protected bids." />
           <button
             type="button"
-            className="text-sm font-bold underline"
+            className="neo-button px-4 py-2 text-sm font-bold"
             disabled={trustlineBusy}
             onClick={() => void handleAddTrustline()}
           >
-            {trustlineBusy ? "Opening wallet…" : "Add USDC trustline"}
+            {trustlineBusy ? "Signing & submitting…" : "Add USDC trustline"}
           </button>
+        </div>
+      )}
+      {trustlineTxHash && (
+        <div className="space-y-2">
+          <InfoBanner message="USDC trustline added successfully." />
+          <a
+            className="text-sm font-bold underline"
+            href={getExplorerTxUrl(trustlineTxHash)}
+            target="_blank"
+            rel="noreferrer"
+          >
+            View trustline transaction
+          </a>
+        </div>
+      )}
+      {needsUsdcFunds && (
+        <div className="space-y-2">
+          <InfoBanner message="Trustline is ready. Fund testnet USDC to place bids." />
+          <a
+            className="text-sm font-bold underline"
+            href={getTestnetUsdcFaucetUrl()}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Get testnet USDC from Circle Faucet
+          </a>
         </div>
       )}
       {connected && !biddingOpen && (
