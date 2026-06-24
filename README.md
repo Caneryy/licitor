@@ -1,5 +1,8 @@
 # Licitor - Real-time Auction
 
+[![CI](https://github.com/Caneryy/licitor/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/Caneryy/licitor/actions/workflows/ci.yml)
+[![Deploy Contracts (Testnet)](https://github.com/Caneryy/licitor/actions/workflows/deploy-contract.yml/badge.svg)](https://github.com/Caneryy/licitor/actions/workflows/deploy-contract.yml)
+
 Stellar testnet live bidding dApp with **escrow-backed USDC bids**, Soroban inter-contract calls, cursor-based `getEvents` sync, and production CI/CD.
 
 **Production:** [https://licitor-psi.vercel.app](https://licitor-psi.vercel.app)
