@@ -24,9 +24,9 @@ export const DETAIL_POLL_INTERVAL_MS = 2000;
 export const MIN_FEE_XLM = 0.5;
 export const EVENT_LEDGER_FALLBACK = 500;
 
-/** Default testnet USDC SAC when VITE_TOKEN_CONTRACT_ID is unset. */
+/** Default testnet USDC SAC (Circle issuer) when VITE_TOKEN_CONTRACT_ID is unset. */
 export const DEFAULT_TESTNET_USDC_SAC =
-  "CCW67TSZV3SSFYW5YT6L4GQIETBZNMXRJZKCZBU6O6MYPAAJMR7WAS6";
+  "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA";
 
 function requireEnv(name: string, value: string | undefined): string {
   if (!value) {

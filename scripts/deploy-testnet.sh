@@ -7,6 +7,8 @@ cd "$ROOT"
 NETWORK="${STELLAR_NETWORK:-testnet}"
 SOURCE="${STELLAR_SOURCE:-}"
 TOKEN_ID="${TOKEN_CONTRACT_ID:-}"
+# Circle testnet USDC issuer — used to resolve the SAC contract id when TOKEN_CONTRACT_ID is unset.
+USDC_ASSET="USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5"
 
 if [[ -z "$SOURCE" ]]; then
   echo "Set STELLAR_SOURCE to a funded testnet identity (stellar keys address)." >&2
@@ -25,9 +27,9 @@ if [[ ! -f "$ESCROW_WASM" ]] || [[ ! -f "$AUCTION_WASM" ]]; then
 fi
 
 if [[ -z "$TOKEN_ID" ]]; then
-  echo "TOKEN_CONTRACT_ID not set. Using testnet USDC SAC (Circle testnet issuer)."
-  echo "Override with: TOKEN_CONTRACT_ID=<sac_contract_id> ./scripts/deploy-testnet.sh"
-  TOKEN_ID="CCW67TSZV3SSFYW5YT6L4GQIETBZNMXRJZKCZBU6O6MYPAAJMR7WAS6"
+  echo "TOKEN_CONTRACT_ID not set. Resolving testnet USDC SAC for $USDC_ASSET ..."
+  TOKEN_ID=$(stellar contract id asset --asset "$USDC_ASSET" --network "$NETWORK")
+  echo "Resolved token SAC: $TOKEN_ID"
 fi
 
 echo "Deploying escrow (admin=$SOURCE, token=$TOKEN_ID)..."

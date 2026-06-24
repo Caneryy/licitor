@@ -1,9 +1,8 @@
 {
   "network": "testnet",
-  "deployedAt": "placeholder-run-scripts-deploy-testnet-sh",
-  "tokenContractId": "CCW67TSZV3SSFYW5YT6L4GQIETBZNMXRJZKCZBU6O6MYPAAJMR7WAS6",
-  "escrowContractId": "",
-  "auctionContractId": "",
-  "legacyContractId": "CBKLZBSTFM5YQ27LRDHDA4VTEY4CDCWVSHKOYWZN2X7AIKBKVRRPFGBQ",
-  "note": "Run ./scripts/deploy-testnet.sh with STELLAR_SOURCE set to populate live IDs."
+  "deployedAt": "2026-06-24T07:48:12Z",
+  "tokenContractId": "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA",
+  "escrowContractId": "CDMCXTJ5S7XOLSVGBFYTL5GFEQAH2ZASXEO47OMZAEWP7EXW4WYSNVIW",
+  "auctionContractId": "CDNNII2NQ34FO6A2IBCHSTKJW7L5PPXMQ5IDAWUQ5VJ5ELEEFIAXZ4UB",
+  "legacyContractId": "CBKLZBSTFM5YQ27LRDHDA4VTEY4CDCWVSHKOYWZN2X7AIKBKVRRPFGBQ"
 }

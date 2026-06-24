@@ -27,7 +27,7 @@ make build-contracts
 
 ```bash
 export STELLAR_SOURCE=<your-stellar-identity>
-export TOKEN_CONTRACT_ID=CCW67TSZV3SSFYW5YT6L4GQIETBZNMXRJZKCZBU6O6MYPAAJMR7WAS6  # optional
+# TOKEN_CONTRACT_ID is optional — script resolves USDC SAC via `stellar contract id asset`
 ./scripts/deploy-testnet.sh
 ```
 
